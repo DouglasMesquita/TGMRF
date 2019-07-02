@@ -1,0 +1,17 @@
+Package: TGMRF
+Type: Package
+Title: Transformed Gaussian Markov Random Fields
+Version: 0.1.11
+Author: Douglas Roberto Mesquita Azevedo and Marcos Oliveira Prates
+Maintainer: <douglasrm.azevedo@gmail.com>
+Description: A R package to fit spatial data using Transformed Gaussian Markov Random Fields
+Encoding: UTF-8
+Depends: R (>= 3.4)
+Imports: truncnorm, tmvtnorm, mvtnorm, spdep, RcppArmadillo, Rcpp (>= 0.12.17)
+Sugests: coda, plot3D
+License: GPL (>= 2)
+LazyData: TRUE
+LinkingTo: Rcpp, RcppArmadillo
+RoxygenNote: 6.1.1
+NeedsCompilation: yes
+Packaged: 2019-04-22 21:36:47 UTC; douglas
