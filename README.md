@@ -1,5 +1,5 @@
 
-# FLAMES
+# TGMRF
 
 <!-- badges: start -->
 

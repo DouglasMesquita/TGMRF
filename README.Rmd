@@ -10,7 +10,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-# FLAMES
+# TGMRF
 
 <!-- badges: start -->
 <!-- [![CRAN status](https://www.r-pkg.org/badges/version/FLAMES)](https://cran.r-project.org/package=FLAMES) -->
