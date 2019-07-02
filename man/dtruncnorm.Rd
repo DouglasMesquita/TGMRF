@@ -4,9 +4,11 @@
 \alias{dtruncnorm}
 \title{dtruncnorm}
 \usage{
-dtruncnorm(a, b, mean, var, x)
+dtruncnorm(x, a, b, mean, var)
 }
 \arguments{
+\item{x}{Point to evaluate the density}
+
 \item{a}{Lower bound}
 
 \item{b}{Upper bound}
@@ -14,8 +16,6 @@ dtruncnorm(a, b, mean, var, x)
 \item{mean}{Normal expectation}
 
 \item{var}{Normal variance}
-
-\item{x}{Point to evaluate the density}
 }
 \description{
 To restore a point density of a truncated normal

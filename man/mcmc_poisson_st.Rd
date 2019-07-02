@@ -5,11 +5,10 @@
 \title{MCMC poisson for spatio-temporal data}
 \usage{
 mcmc_poisson_st(y, X, E, n_reg, n_var, neigh, beta, nu, eps, rho_s, rho_t,
-  rho_st, proposal_rho, tau, nsim, burnin, thin, type, type_num, mat_type,
-  method, tau_beta, mean_beta, eta_nu, psi_nu, ninit, maxpoint, var_beta,
-  var_eps, var_log_nu, var_rho, fix_rho_s, fix_rho_t, fix_rho_st,
-  range_rho_s, range_rho_t, range_rho_st, rcpp, conj, verbose, c_beta,
-  c_eps, c_nu, c_rho)
+  rho_st, tau, nsim, burnin, thin, type, type_num, mat_type, method,
+  tau_beta, mean_beta, eta_nu, psi_nu, ninit, maxpoint, var_beta, var_eps,
+  var_log_nu, var_rho, fix_rho_s, fix_rho_t, fix_rho_st, range_rho_s,
+  range_rho_t, range_rho_st, verbose, c_beta, c_eps, c_nu, c_rho)
 }
 \arguments{
 \item{y}{Response variable}
@@ -35,8 +34,6 @@ mcmc_poisson_st(y, X, E, n_reg, n_var, neigh, beta, nu, eps, rho_s, rho_t,
 \item{rho_t}{A Initial value to temporal dependence}
 
 \item{rho_st}{A Initial value to spatio-temporal dependence}
-
-\item{proposal_rho}{"normal" or "uniform}
 
 \item{tau}{Precision parameter vector of MCAR}
 

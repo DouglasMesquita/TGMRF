@@ -4,10 +4,10 @@
 \alias{st_tgmrf}
 \title{Spatio-temporal Transformed Gaussian Markov Random Field}
 \usage{
-st_tgmrf(y, X, n_reg, n_var, beta, nu, rho_s, rho_t, rho_st, proposal_rho,
-  tau, family, type, mat_type, method, nsim, burnin, thin, E, n, neigh,
-  prior_param, MCMC_config, fix_rho, range, rcpp, conj, verbose, c_beta,
-  c_eps, c_nu, c_rho)
+st_tgmrf(y, X, n_reg, n_var, beta, nu, eps, rho_s, rho_t, rho_st, tau,
+  family, type, mat_type, method, nsim, burnin, thin, E, n, neigh,
+  prior_param, MCMC_config, fix_rho, range, verbose, c_beta, c_eps, c_nu,
+  c_rho)
 }
 \arguments{
 \item{y}{Response variable}
@@ -27,8 +27,6 @@ st_tgmrf(y, X, n_reg, n_var, beta, nu, rho_s, rho_t, rho_st, proposal_rho,
 \item{rho_t}{Temporal dependence parameter}
 
 \item{rho_st}{Spatio-temporal dependence parameter}
-
-\item{proposal_rho}{"normal" or "uniform}
 
 \item{tau}{Vector of precisions of variables}
 

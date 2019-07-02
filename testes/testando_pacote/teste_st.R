@@ -19,7 +19,7 @@ X <- scale(matrix(c(rnorm(n = rowid*colid*n_vars, mean = 0)), ncol = P))
 
 type_data <- 'log-normal'
 family <- 'poisson'
-seed <- sample(x = 1:10000, 1)#123456
+seed <- 123456
 
 rho_s <- 0.95*2.25
 rho_t <- 0.00001

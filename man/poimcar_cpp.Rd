@@ -4,11 +4,11 @@
 \alias{poimcar_cpp}
 \title{POIMCAR}
 \usage{
-poimcar_cpp(nsim, burnin, thin, eps, mu, beta, nu, rho_s, rho_t, rho_st,
-  proposal_rho, X, y, E, Ws, Wt, N, P, mean_beta, tau_beta, eta_nu, psi_nu,
-  fix_rho_s, fix_rho_t, fix_rho_st, range_rho_s, range_rho_t, range_rho_st,
-  type, var_beta_met, var_eps_met, var_rho_met, var_log_nu_met, conj,
-  verbose, c_beta, c_eps, c_nu, c_rho)
+poimcar_cpp(nsim, burnin, thin, eps, mu, beta, nu, rho_s, rho_t, rho_st, X,
+  y, E, Ws, Wt, N, P, mean_beta, tau_beta, eta_nu, psi_nu, fix_rho_s,
+  fix_rho_t, fix_rho_st, range_rho_s, range_rho_t, range_rho_st, type,
+  var_beta_met, var_eps_met, var_rho_met, var_log_nu_met, verbose, c_beta,
+  c_eps, c_nu, c_rho)
 }
 \arguments{
 \item{nsim}{MCMC size}

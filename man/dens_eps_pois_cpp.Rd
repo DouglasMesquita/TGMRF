@@ -4,7 +4,7 @@
 \alias{dens_eps_pois_cpp}
 \title{dens_eps_pois_cpp}
 \usage{
-dens_eps_pois_cpp(x, params, ele, eps, nu, Q, DSigma, Xbeta)
+dens_eps_pois_cpp(x, params, ele, eps, nu, Q, dsigma, Xbeta)
 }
 \arguments{
 \item{x}{Point to restore the density}

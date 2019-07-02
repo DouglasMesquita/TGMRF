@@ -37,26 +37,90 @@
 #' @return nu A vector with samples of nu
 #' @return rho A vector with samples of rho
 #'
-#' @examples library(spdep)
-#' ##-- Read the data
-#' data(nenia_s)
-#' ##-- Coordinates and neighborhood structure
-#' coord <- as.data.frame(cbind(x = nenia$x, y = nenia_s$y))
-#' coordinates(coord) <- c("x","y")
-#' dst <- 3
-#' snail.nb <- dnearneigh(coord, 0, dst)
-#' ##-- Initial values
-#' rho <- 0.5
-#' nu <- 1
-#' nsim = 6000 #--- This can take a long time (~4 hours)
-#' formula = 'count ~ elevation + slope + nail +
-#'                    densiometer + PREMON + PlApp'
+#' @examples ##-- Pacotes ----
+#' library(TGMRF)
+#' library(tmvtnorm)
+#' library(truncnorm)
+#' library(OpenMPController)
 #'
-#' out <- tgmrf(data = nenia_s, formula = formula,
-#'              beta = NULL, nu = nu, rho_s = rho,
-#'              family = "poisson", type = "gamma-shape", mat_type = "car",
-#'              nsim = nsim, burnin = 30000, thin = 10,
-#'              E = NULL, neigh = snail.nb)
+#' #'#'-- Configurações ----
+#' rowid <- 8
+#' colid <- 5
+#' n_vars <- 2
+#' N <- rowid*colid*n_vars
+#'
+#' betas <- 0.5
+#' intercept <- -.5
+#' nu <- 0.3
+#'
+#' P <- length(betas)
+#' X <- scale(matrix(c(rnorm(n = rowid*colid*n_vars, mean = 0)), ncol = P))
+#'
+#' type_data <- 'log-normal'
+#' family <- 'poisson'
+#' seed <- 123456
+#'
+#' rho_s <- 0.95*2.25
+#' rho_t <- 0.00001
+#' rho_st <- 0.00001
+#'
+#' #'#'-- Dados ----
+#' data_poisson <- rtgmrf(rowid = rowid, colid = colid, X = X, n_var = n_vars,
+#'                        rho_s = rho_s, rho_t = rho_t, rho_st = rho_st,
+#'                        betas = betas, nu = nu, intercept = intercept,
+#'                        type_data = type_data, family = family,
+#'                        seed = seed)
+#'
+#' hist(data_poisson$y, breaks = 20)
+#'
+#' bd <- data.frame(y = data_poisson$y,
+#'                  regiao = data_poisson$reg, grupo = data_poisson$var,
+#'                  X1 = data_poisson$X,
+#'                  eps = data_poisson$eps,
+#'                  check.names = F)
+#' neigh <- data_poisson$neigh
+#'
+#' #'#'-- Configurações ----
+#' nsim <- 20000
+#' burnin <- 0
+#' thin <- 1
+#' formula <- paste0('y ~ X1')
+#'
+#' #'#'-- Metropolis rcpp ----
+#' vars_beta <- diag(c(0.03, 0.02), nrow = P+1, ncol = P+1)
+#' vars_eps <- diag(0.0001, nrow = N, ncol = N)
+#' var_log_nu <- 0.85
+#' var_rho <- diag(c(0.1, 0.3, 0.05), ncol = 3, nrow = 3)
+#'
+#' omp_set_num_threads(n = 1)
+#' type_model <- type_data
+#'
+#' c_beta <- 1#'(2.38^2)/P
+#' c_eps <- 1#'(2.38^2)/N
+#' c_nu <- 1#'(2.38^2)
+#' c_rho <- 1#'(2.38^2)/3
+#'
+#' system.time(
+#'   out_metcpp <- tgmrf(data = bd, formula = formula,
+#'                       spatial_var = "regiao", group_var = "grupo",
+#'                       beta = c(intercept, betas), eps = data_poisson$eps,
+#'                       nu = nu,
+#'                       rho_s = 0.95, rho_t = 0, rho_st = 0,
+#'                       family = family, type = type_model, mat_type = "car", method = "metropolis",
+#'                       nsim = nsim, burnin = burnin, thin = thin,
+#'                       prior_param = list("nu" = list("shape" = 0.2, "rate" = 0.2)),
+#'                       E = NULL, neigh = neigh,
+#'                       fix_rho = list("rho_s" = FALSE, "rho_t" = FALSE, "rho_st" = FALSE),
+#'                       MCMC_config = list('metropolis' = list('var_beta' = vars_beta,
+#'                                                              'var_eps' = vars_eps,
+#'                                                              'var_log_nu' = var_log_nu,
+#'                                                              'var_rho' = var_rho)),
+#'                       range = list("rho_s" = c(-1, 1), "rho_t" = c(-1, 1), "rho_st" = c(-1, 1)),
+#'                       scale = FALSE, verbose = TRUE,
+#'                       c_beta = c_beta, c_eps = c_eps, c_nu = c_nu, c_rho = c_rho)
+#' )
+#'
+#' summary(out_metcpp)
 #'
 #' @import RcppArmadillo
 #' @import tmvtnorm
