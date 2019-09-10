@@ -67,9 +67,9 @@ rtgmrf <- function(rowid = 10, colid = 10, X = NULL, n_var = 1,
   if(!is.null(neigh) & class(neigh) != "nb"){
     stop("The neighbors musta belong to a nb class\n")
   }
-  if(family == 'poisson' & !(type_data %in% c('gamma-shape', 'gamma-scale', 'gamma-var',
+  if(family == 'poisson' & !(type_data %in% c('gamma-shape', 'gamma-scale', 'gamma-precision',
                                               'log-normal', 'weibull-scale', 'weibull-shape'))){
-    stop("The only models accepted for poisson family are: 'gamma-shape', 'gamma-scale', 'gamma-var',
+    stop("The only models accepted for poisson family are: 'gamma-shape', 'gamma-scale', 'gamma-precision',
                                               'log-normal', 'weibull-scale' or 'weibull-shape' \n ")
   }
   if(family == 'binary' & !(type_data %in% c('beta-logit', 'beta-probit', 'beta-alpha', 'beta-beta'))){

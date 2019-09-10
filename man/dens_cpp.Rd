@@ -4,7 +4,7 @@
 \alias{dens_cpp}
 \title{dens_cpp}
 \usage{
-dens_cpp(x_beta, x_eps, x_rho, x_nu, params, mu, cor_mat)
+dens_cpp(x_beta, x_eps, x_mu, x_rho, x_nu, params, Q, sigma, Qsparse)
 }
 \description{
 To usage in MCMC estimation

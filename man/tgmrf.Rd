@@ -6,13 +6,13 @@
 \usage{
 tgmrf(data, formula, neigh, scale = T, spatial_var, neigh_order = NULL,
   group_var = NULL, change_vars = NULL, beta = NULL, nu = 1,
-  eps = NULL, rho_s = 0, rho_t = 0, rho_st = 0, tau = NULL,
-  family = "poisson", type = "gamma-shape", mat_type = "car",
-  method = "metropolis", nsim = 1000, burnin = 0, thin = 1,
-  E = NULL, n = 1, prior_param = NULL, MCMC_config = NULL,
-  fix_rho = NULL, range = list(rho_s = c(-1, 1), rho_t = c(-1, 1),
-  rho_st = c(-1, 1)), verbose = FALSE, c_beta = NULL, c_eps = NULL,
-  c_nu = NULL, c_rho = NULL)
+  eps = NULL, mu = NULL, rho_s = 0, rho_t = 0, rho_st = 0,
+  tau = NULL, family = "poisson", type = "gamma-shape",
+  mat_type = "car", method = "metropolis", nsim = 1000, burnin = 0,
+  thin = 1, E = NULL, n = 1, prior_param = NULL,
+  MCMC_config = NULL, fix_rho = NULL, range = list(rho_s = c(-1, 1),
+  rho_t = c(-1, 1), rho_st = c(-1, 1)), verbose = FALSE, c_beta = NULL,
+  c_eps = NULL, c_mu = NULL, c_nu = NULL, c_rho = NULL)
 }
 \arguments{
 \item{data}{A data.frame with all variables used to fit a model}

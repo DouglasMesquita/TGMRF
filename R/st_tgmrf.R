@@ -39,7 +39,7 @@
 #' @export
 
 st_tgmrf <- function(y, X, n_reg, n_var,
-                     beta, nu, eps,
+                     beta, nu, eps, mu,
                      rho_s, rho_t, rho_st,
                      tau,
                      family, type, mat_type, method,
@@ -49,7 +49,7 @@ st_tgmrf <- function(y, X, n_reg, n_var,
                      MCMC_config,
                      fix_rho, range,
                      verbose,
-                     c_beta, c_eps, c_nu, c_rho){
+                     c_beta, c_eps, c_mu, c_nu, c_rho){
 
   P <- length(beta)
   N <- length(y)
@@ -66,7 +66,9 @@ st_tgmrf <- function(y, X, n_reg, n_var,
   if(is.null(eps)){
     eps <- rep(0, N)
   }
-  mu <- rep(0, N)
+  if(is.null(mu)){
+    mu <- qgamma(p = 0.5, shape = rep(1, N), rate = 1)
+  }
 
   fix_rho_s <- fix_rho$rho_s
   fix_rho_t <- fix_rho$rho_t
@@ -78,6 +80,7 @@ st_tgmrf <- function(y, X, n_reg, n_var,
 
   ninit <- MCMC_config$arms$ninit
   maxpoint <- MCMC_config$arms$maxpoint
+
   var_eps <- MCMC_config$metropolis$var_eps
   if(is.matrix(var_eps)){
     if(any(!(dim(var_eps) == c(N, N)))) stop(sprintf('var_eps must be a %sx%s matrix', N, N))
@@ -86,6 +89,16 @@ st_tgmrf <- function(y, X, n_reg, n_var,
     if(length(var_eps) == 1) var_eps <- rep(var_eps, N)
     var_eps <- diag(var_eps, ncol = N)
   }
+
+  var_log_mu <- MCMC_config$metropolis$var_log_mu
+  if(is.matrix(var_log_mu)){
+    if(any(!(dim(var_log_mu) == c(N, N)))) stop(sprintf('var_log_mu must be a %sx%s matrix', N, N))
+  } else{
+    if(!(length(var_log_mu) %in% c(1, N))) stop('var_log_mu must length 1 or the number of elements')
+    if(length(var_log_mu) == 1) var_log_mu <- rep(var_log_mu, N)
+    var_log_mu <- diag(var_log_mu, ncol = N)
+  }
+
   var_beta <- MCMC_config$metropolis$var_beta
   if(is.matrix(var_beta)){
     if(any(!(dim(var_beta) == c(P, P)))) stop(sprintf('var_beta must be a %sx%s matrix', P, P))
@@ -120,7 +133,7 @@ st_tgmrf <- function(y, X, n_reg, n_var,
   if(family == "poisson"){
     if(type == "gamma-scale") type_num <- 1
     else if(type == "gamma-shape") type_num <- 2
-    else if(type == "gamma-var") type_num <- 3
+    else if(type == "gamma-precision") type_num <- 3
     else if(type == "log-normal") type_num <- 4
     else if(type == "weibull-shape") type_num <- 5
     else if(type == "weibull-scale") type_num <- 6
@@ -128,18 +141,18 @@ st_tgmrf <- function(y, X, n_reg, n_var,
 
     out <- mcmc_poisson_st(y = y, X = X, E = E,
                            n_reg = n_reg, n_var = n_var, neigh = neigh,
-                           beta = beta, nu = nu, eps = eps,
+                           beta = beta, nu = nu, eps = eps, mu = mu,
                            rho_s = rho_s, rho_t = rho_t, rho_st = rho_st, tau = tau,
                            nsim = nsim, burnin = burnin, thin = thin,
                            type = type, type_num = type_num, mat_type = mat_type, method = method,
                            mean_beta = mean_beta, tau_beta = tau_beta,
                            eta_nu = eta_nu, psi_nu = psi_nu,
                            ninit, maxpoint,
-                           var_beta = var_beta, var_eps = var_eps, var_log_nu = var_log_nu, var_rho = var_rho,
+                           var_beta = var_beta, var_eps = var_eps, var_log_mu = var_log_mu, var_log_nu = var_log_nu, var_rho = var_rho,
                            fix_rho_s = fix_rho_s, fix_rho_t = fix_rho_t, fix_rho_st = fix_rho_st,
                            range_rho_s = range_rho_s, range_rho_t = range_rho_t, range_rho_st = range_rho_st,
                            verbose = verbose,
-                           c_beta = c_beta, c_eps = c_eps, c_nu = c_nu, c_rho = c_rho)
+                           c_beta = c_beta, c_eps = c_eps, c_mu = c_mu, c_nu = c_nu, c_rho = c_rho)
   } else{
     stop("It is still not ready")
 

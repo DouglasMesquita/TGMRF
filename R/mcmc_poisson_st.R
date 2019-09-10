@@ -29,8 +29,9 @@
 #' @param ninit Number of initial points in ARMS method
 #' @param maxpoint Maximum number of evaluation a envelope in each iteration
 #' @param var_beta Variance of beta proposal (metropolis)
-#' @param var_eps Variance of beta proposal (metropolis)
-#' @param var_rho Variance matrix (metropolis)
+#' @param var_eps Variance of eps proposal (metropolis)
+#' @param var_log_mu Variance of log(mu) proposal (metropolis)
+#' @param var_rho Variance of rho proposal (metropolis)
 #' @param fix_rho_s Is rho_s fixed?
 #' @param fix_rho_t Is rho_t fixed?
 #' @param fix_rho_st Is rho_st fixed?
@@ -48,7 +49,7 @@
 
 mcmc_poisson_st <- function(y, X, E,
                             n_reg, n_var, neigh,
-                            beta, nu, eps,
+                            beta, nu, eps, mu,
                             rho_s, rho_t, rho_st,
                             tau,
                             nsim, burnin, thin,
@@ -56,11 +57,11 @@ mcmc_poisson_st <- function(y, X, E,
                             tau_beta, mean_beta,
                             eta_nu, psi_nu,
                             ninit, maxpoint,
-                            var_beta, var_eps, var_log_nu, var_rho,
+                            var_beta, var_eps, var_log_mu, var_log_nu, var_rho,
                             fix_rho_s, fix_rho_t, fix_rho_st,
                             range_rho_s, range_rho_t, range_rho_st,
                             verbose,
-                            c_beta, c_eps, c_nu, c_rho){
+                            c_beta, c_eps, c_mu, c_nu, c_rho){
 
   N <- length(eps)
   P <- length(beta)
@@ -91,7 +92,7 @@ mcmc_poisson_st <- function(y, X, E,
   glm_sd <- summary(glm(formula = y ~ -1 + X , family = "poisson"))$coefficients[, 2]
 
   foo <- poimcar_cpp(nsim = nsim, burnin = burnin, thin = thin,
-                     eps = eps, mu = rep(0.5, N), beta = beta, nu = nu,
+                     eps = eps, mu = mu, beta = beta, nu = nu,
                      rho_s = rho_s, rho_t = rho_t, rho_st = rho_st,
                      X = X, y = y, E = E,
                      Ws = Ws, Wt = Wt,
@@ -101,9 +102,9 @@ mcmc_poisson_st <- function(y, X, E,
                      fix_rho_s = fix_rho_s, fix_rho_t = fix_rho_t, fix_rho_st = fix_rho_st,
                      range_rho_s = range_rho_s, range_rho_t = range_rho_t, range_rho_st = range_rho_st,
                      type = type_num,
-                     var_beta_met = var_beta, var_eps_met = var_eps, var_log_nu_met = var_log_nu, var_rho_met = var_rho,
+                     var_beta_met = var_beta, var_eps_met = var_eps, var_log_mu_met = var_log_mu, var_log_nu_met = var_log_nu, var_rho_met = var_rho,
                      verbose = verbose,
-                     c_beta = c_beta, c_eps = c_eps, c_nu = c_nu, c_rho = c_rho)
+                     c_beta = c_beta, c_eps = c_eps, c_mu = c_mu, c_nu = c_nu, c_rho = c_rho)
 
   out <- list(eps = foo$eps,
               mu = foo$mu,

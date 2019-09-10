@@ -53,14 +53,11 @@ rtgmrf_st <- function(rowid = 10, colid = 10, n_var = 2, X = NULL,
 
   P <- length(betas)
   if(is.null(intercept)){
-
     if(is.null(X)){
       X <- scale(matrix(rnorm(n = P*N), ncol = P))
     }
-
     colnames(X) <- paste0('X', 1:P)
   } else{
-
     if(is.null(X)){
       X <- scale(matrix(rnorm(n = P*N), ncol = P))
     }
@@ -77,38 +74,36 @@ rtgmrf_st <- function(rowid = 10, colid = 10, n_var = 2, X = NULL,
 
   Q <- buildQ(Ws = Ws, Wt = Wt, tau = tau, rho_s = rho_s, rho_t = rho_t, rho_st = rho_st)
   sigma <- solve(Q)
-  cormat <- diag(sqrt(1/diag(sigma)))%*%sigma%*%diag(sqrt(1/diag(sigma)))
 
-  # eps <- as.vector(rmvnorm(1, rep(0, N), sigma))
-  eps <- as.vector(rmvnorm(1, rep(0, N), cormat))
-  eps <- scale(eps, scale = FALSE)
+  eps <- as.vector(rmvnorm(1, rep(0, N), sigma))
+  eps <- eps - mean(eps)
 
   Xbeta <- as.vector(X%*%betas)
 
   if(family == 'poisson'){
     if(type_data == 'gamma-scale'){
       # mu <- qgamma(pnorm(eps, rep(0, N), sd = sqrt(diag(sigma))), shape = nu, scale = exp(Xbeta)/nu)
-      mu <- qgamma(pnorm(eps, rep(0, N), sd = 1), shape = nu, scale = exp(Xbeta)/nu)
+      mu <- qgamma(pnorm(eps, rep(0, N), sd = sqrt(diag(sigma))), shape = nu, scale = exp(Xbeta)/nu)
     }
     if(type_data == 'gamma-shape'){
       # mu <- qgamma(pnorm(eps, rep(0, N), sd = sqrt(diag(sigma))), shape = exp(Xbeta)*nu, scale = 1/nu)
-      mu <- qgamma(pnorm(eps, rep(0, N), sd = 1), shape = exp(Xbeta)*nu, scale = 1/nu)
+      mu <- qgamma(pnorm(eps, rep(0, N), sd = sqrt(diag(sigma))), shape = exp(Xbeta)*nu, scale = 1/nu)
     }
-    if(type_data == 'gamma-var'){
+    if(type_data == 'gamma-precision'){
       # mu <- qgamma(pnorm(eps, rep(0, N), sd = sqrt(diag(sigma))), shape = exp(Xbeta)^2*nu, scale = 1/(nu*exp(Xbeta)))
-      mu <- qgamma(pnorm(eps, rep(0, N), sd = 1), shape = exp(Xbeta)^2*nu, scale = 1/(nu*exp(Xbeta)))
+      mu <- qgamma(pnorm(eps, rep(0, N), sd = sqrt(diag(sigma))), shape = exp(Xbeta)^2*nu, scale = 1/(nu*exp(Xbeta)))
     }
     if(type_data == 'log-normal'){
       # mu <- qlnorm(pnorm(eps, rep(0, N), sd = sqrt(diag(sigma))), meanlog = Xbeta, sdlog = sqrt(diag(sigma)/nu))
-      mu <- qlnorm(pnorm(eps, rep(0, N), sd = 1), meanlog = Xbeta, sdlog = sqrt(diag(sigma)/nu))
+      mu <- qlnorm(pnorm(eps, rep(0, N), sd = sqrt(diag(sigma))), meanlog = Xbeta, sdlog = sqrt(diag(sigma)/nu))
     }
     if(type_data == 'weibull-scale'){
       # mu <- qweibull(pnorm(eps, rep(0, N), sd = sqrt(diag(sigma))), shape = 1/nu, scale = exp(Xbeta))
-      mu <- qweibull(pnorm(eps, rep(0, N), sd = 1), shape = 1/nu, scale = exp(Xbeta))
+      mu <- qweibull(pnorm(eps, rep(0, N), sd = sqrt(diag(sigma))), shape = 1/nu, scale = exp(Xbeta))
     }
     if(type_data == 'weibull-shape'){
       # mu <- qweibull(pnorm(eps, rep(0, N), sd = sqrt(diag(sigma))), shape = exp(Xbeta), scale = 1/nu)
-      mu <- qweibull(pnorm(eps, rep(0, N), sd = 1), shape = exp(Xbeta), scale = 1/nu)
+      mu <- qweibull(pnorm(eps, rep(0, N), sd = sqrt(diag(sigma))), shape = exp(Xbeta), scale = 1/nu)
     }
 
     y <- rpois(n = N, lambda = mu)
@@ -142,5 +137,5 @@ rtgmrf_st <- function(rowid = 10, colid = 10, n_var = 2, X = NULL,
 
   return(list(y = y, X = X, reg = rep(1:n_reg, each = n_var), var = rep(1:n_var, times = n_reg),
               neigh = neigh, coord = coord,
-              Q = Q, cormat = cormat, mu = mu, eps = eps))
+              Q = Q, mu = mu, eps = eps))
 }

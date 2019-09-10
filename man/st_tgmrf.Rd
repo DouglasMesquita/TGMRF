@@ -4,10 +4,10 @@
 \alias{st_tgmrf}
 \title{Spatio-temporal Transformed Gaussian Markov Random Field}
 \usage{
-st_tgmrf(y, X, n_reg, n_var, beta, nu, eps, rho_s, rho_t, rho_st, tau,
+st_tgmrf(y, X, n_reg, n_var, beta, nu, eps, mu, rho_s, rho_t, rho_st, tau,
   family, type, mat_type, method, nsim, burnin, thin, E, n, neigh,
-  prior_param, MCMC_config, fix_rho, range, verbose, c_beta, c_eps, c_nu,
-  c_rho)
+  prior_param, MCMC_config, fix_rho, range, verbose, c_beta, c_eps, c_mu,
+  c_nu, c_rho)
 }
 \arguments{
 \item{y}{Response variable}

@@ -4,7 +4,7 @@
 \alias{summary.tgmrf}
 \title{Summary for tgmrf_model class (coda is necessary)}
 \usage{
-\method{summary}{tgmrf}(object, HPD = T)
+\method{summary}{tgmrf}(object, bw = 0.1, HPD = T)
 }
 \arguments{
 \item{object}{tgmrf_model object to summarise}

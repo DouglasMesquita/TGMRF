@@ -363,51 +363,180 @@ double dtmvnorm_cpp(arma::vec x, arma::vec a, arma::vec b, arma::vec mean, arma:
   return res;
 }
 
-//' @title dens_eps_pois_cpp
+//' @title dens_beta_cpp
 //'
 //' @description To usage in MCMC estimation
 //'
-//' @param x Point to restore the density
-//' @param params A list with some informations about the MCMC model.
-//'
 // [[Rcpp::export]]
-double dens_eps_pois_cpp(double x, Rcpp::List& params, int& ele, arma::vec& eps, double& nu, arma::sp_mat& Q, arma::mat dsigma, arma::vec& Xbeta){
-  double out = 0.0, lambda, tx;
-
-  /// Variable
-  tx = x;
+double dens_beta_cpp(arma::vec x_beta, arma::vec x_eps, double x_nu, arma::mat sigma,
+                     Rcpp::List& params){
+  int i;
+  double out = 0.0, mu = 0.0, jacmu = 0.0, x_log_mu = 0.0;
 
   /// Arguments
   int N = params["N"];
+  int P = params["P"];
   int type = params["type"];
 
   arma::vec y = params["y"];
   arma::vec e = params["e"];
+  arma::mat X = params["X"];
+
+  arma::vec tau_beta = params["tau_beta"];
+  arma::vec mean_beta = params["mean_beta"];
 
   /// Auxiliar vector
-  arma::vec ep = eps;
+  arma::vec Xbet(N);
 
-  /// Adding the proposal to its position
-  ep(ele) = tx;
+  /// Updating Xbeta
+  Xbet = X*x_beta;
 
-  /// Lambda
-  if(type == 1) lambda = R::qgamma(R::pnorm(tx, 0, 1, 1, 1), nu, exp(Xbeta(ele))/nu, 1, 1);
-  if(type == 2) lambda = R::qgamma(R::pnorm(tx, 0, 1, 1, 1), exp(Xbeta(ele))*nu, 1/nu, 1, 1);
-  if(type == 3) lambda = R::qgamma(R::pnorm(tx, 0, 1, 1, 1), exp(Xbeta(ele))*exp(Xbeta(ele))*nu, 1/(nu*exp(Xbeta(ele))), 1, 1);
-  if(type == 4) lambda = R::qlnorm(R::pnorm(tx, 0, 1, 1, 1), Xbeta(ele), sqrt(dsigma(ele, ele)/nu), 1, 1);
-  if(type == 5) lambda = R::qweibull(R::pnorm(tx, 0, 1, 1, 1), 1/nu, exp(Xbeta(ele)), 1, 1);
-  if(type == 6) lambda = R::qweibull(R::pnorm(tx, 0, 1, 1, 1), exp(Xbeta(ele)), 1/nu, 1, 1);
+  /// Variable
+  for(i = 0; i < N; i++){
+    if(type == 1) mu = R::qgamma(R::pnorm(x_eps(i), 0, sqrt(sigma(i, i)), 1, 1), x_nu, exp(Xbet(i))/x_nu, 1, 1);
+    if(type == 2) mu = R::qgamma(R::pnorm(x_eps(i), 0, sqrt(sigma(i, i)), 1, 1), exp(Xbet(i))*x_nu, 1/x_nu, 1, 1);
+    if(type == 3) mu = R::qgamma(R::pnorm(x_eps(i), 0, sqrt(sigma(i, i)), 1, 1), exp(Xbet(i))*exp(Xbet(i))*x_nu, 1/(x_nu*exp(Xbet(i))), 1, 1);
+    if(type == 4) mu = R::qlnorm(R::pnorm(x_eps(i), 0, sqrt(sigma(i, i)), 1, 1), Xbet(i), sqrt(sigma(i, i)/x_nu), 1, 1);
+    if(type == 5) mu = R::qweibull(R::pnorm(x_eps(i), 0, sqrt(sigma(i, i)), 1, 1), 1/x_nu, exp(Xbet(i)), 1, 1);
+    if(type == 6) mu = R::qweibull(R::pnorm(x_eps(i), 0, sqrt(sigma(i, i)), 1, 1), exp(Xbet(i)), 1/x_nu, 1, 1);
 
-  // if(type == 1) lambda = R::qgamma(R::pnorm(tx, 0, dsigma(ele, ele), 1, 1), nu, exp(Xbeta(ele))/nu, 1, 1);
-  // if(type == 2) lambda = R::qgamma(R::pnorm(tx, 0, dsigma(ele, ele), 1, 1), exp(Xbeta(ele))*nu, 1/nu, 1, 1);
-  // if(type == 3) lambda = R::qgamma(R::pnorm(tx, 0, dsigma(ele, ele), 1, 1), exp(Xbeta(ele))*exp(Xbeta(ele))*nu, 1/(nu*exp(Xbeta(ele))), 1, 1);
-  // if(type == 4) lambda = R::qlnorm(R::pnorm(tx, 0, dsigma(ele, ele), 1, 1), Xbeta(ele), sqrt(dsigma(ele, ele)/nu), 1, 1);
-  // if(type == 5) lambda = R::qweibull(R::pnorm(tx, 0, dsigma(ele, ele), 1, 1), 1/nu, exp(Xbeta(ele)), 1, 1);
-  // if(type == 6) lambda = R::qweibull(R::pnorm(tx, 0, dsigma(ele, ele), 1, 1), exp(Xbeta(ele)), 1/nu, 1, 1);
+    out = out - e(i)*mu + y(i)*log(mu);
+  }
 
-  /// Out
-  out = arma::as_scalar(-e(ele)*lambda + y(ele)*log(lambda) - 0.5*arma::trans(ep)*Q*ep);
+  out = out -
+    arma::as_scalar((0.01/2.0)*(arma::trans(x_beta)*x_beta)); /// prior beta
+
   return out;
+}
+
+void metropolis_beta_cpp(arma::vec beta_prev, arma::vec eps_prev, double nu_prev,
+                         arma::mat sigma,
+                         arma::mat& varBeta, arma::vec& beta_samp, double c_beta,
+                         Rcpp::List& params){
+
+  double prevloglik, loglik, aux, ratio, u;
+
+  int N = params["N"];
+  int P = params["P"];
+
+  arma::vec beta_proposal(P);
+
+  // beta
+  beta_proposal = rmvnorm_cpp(varBeta*c_beta) + beta_prev;
+
+  // likelihood
+  prevloglik = dens_beta_cpp(beta_prev, eps_prev, nu_prev, sigma, params);
+  loglik = dens_beta_cpp(beta_proposal, eps_prev, nu_prev, sigma, params);
+
+  aux = loglik - prevloglik;
+
+  if(aux > 0){
+    ratio = 1.0;
+  } else {
+    ratio = exp(aux);
+  }
+
+  u = Rcpp::as<double>(runif(1, 0, 1));
+
+  if(u < ratio){
+    beta_samp = beta_proposal;
+  } else {
+    beta_samp = beta_prev;
+  }
+}
+
+//' @title dens_eps_cpp
+//'
+//' @description To usage in MCMC estimation
+//'
+// [[Rcpp::export]]
+double dens_eps_cpp(arma::vec x_beta, arma::vec& x_eps, arma::vec& x_mu, arma::vec x_rho, double x_nu,
+                    Rcpp::List& params, arma::mat& Q, arma::mat& sigma, arma::sp_mat& Qsparse, int i){
+  double out = 0.0, mu, logdet, sign;
+  double jaceps = 0.0;
+
+  /// Arguments
+  int N = params["N"];
+  int P = params["P"];
+  int type = params["type"];
+
+  arma::vec y = params["y"];
+  arma::vec e = params["e"];
+  arma::mat X = params["X"];
+
+  /// Auxiliar vector
+  arma::vec Xbet(N);
+
+  /// Updating Xbeta
+  Xbet = X*x_beta;
+
+  /// Mu
+  if(type == 1) mu = R::qgamma(R::pnorm(x_eps(i), 0, sqrt(sigma(i, i)), 1, 1), x_nu, exp(Xbet(i))/x_nu, 1, 1);
+  if(type == 2) mu = R::qgamma(R::pnorm(x_eps(i), 0, sqrt(sigma(i, i)), 1, 1), exp(Xbet(i))*x_nu, 1/x_nu, 1, 1);
+  if(type == 3) mu = R::qgamma(R::pnorm(x_eps(i), 0, sqrt(sigma(i, i)), 1, 1), exp(Xbet(i))*exp(Xbet(i))*x_nu, 1/(x_nu*exp(Xbet(i))), 1, 1);
+  if(type == 4) mu = R::qlnorm(R::pnorm(x_eps(i), 0, sqrt(sigma(i, i)), 1, 1), Xbet(i), sqrt(sigma(i, i)/x_nu), 1, 1);
+  if(type == 5) mu = R::qweibull(R::pnorm(x_eps(i), 0, sqrt(sigma(i, i)), 1, 1), 1/x_nu, exp(Xbet(i)), 1, 1);
+  if(type == 6) mu = R::qweibull(R::pnorm(x_eps(i), 0, sqrt(sigma(i, i)), 1, 1), exp(Xbet(i)), 1/x_nu, 1, 1);
+
+  x_mu(i) = mu;
+  out = out - e(i)*mu + y(i)*log(mu);
+
+  out = out -
+    arma::as_scalar(0.5*arma::trans(x_eps)*Qsparse*x_eps);               /// eps
+
+  return out;
+}
+
+void metropolis_eps_cpp(arma::vec beta_prev, arma::vec eps_prev, arma::vec mu_prev, arma::vec rho_prev, double nu_prev,
+                        Rcpp::List& params,
+                        arma::mat& varEps, arma::mat& varLogMu,
+                        arma::vec& eps_samp, arma::vec& mu_samp,
+                        double c_eps, double c_mu,
+                        arma::mat& Q_prev, arma::mat& sigma_prev, arma::sp_mat& Qsparse_prev,
+                        int i){
+
+  double prevloglik, loglik, prevdens, dens, aux, ratio, u;
+
+  int N = params["N"];
+  int P = params["P"];
+
+  double eps_proposal;
+
+  arma::vec eps(N);
+  arma::vec mu(N);
+
+  eps_proposal = Rcpp::as<double>(rnorm(1, eps_prev(i), sqrt(varEps(i, i)*c_eps)));
+  // eps_proposal = Rcpp::as<double>(rnorm(1, eps_prev(i), sqrt(sigma_prev(i, i)*c_eps)));
+  // eps_proposal = eps_prev(i);
+
+  eps = eps_prev;
+  mu = mu_prev;
+
+  eps(i) = eps_proposal;
+  eps(N-1) = -sum(eps.subvec(0, (N-2)));
+
+  // likelihood
+  prevloglik = dens_eps_cpp(beta_prev, eps_prev, mu, rho_prev, nu_prev, params, Q_prev, sigma_prev, Qsparse_prev, i);
+  loglik = dens_eps_cpp(beta_prev, eps, mu, rho_prev, nu_prev, params, Q_prev, sigma_prev, Qsparse_prev, i);
+
+  aux = loglik - prevloglik;
+
+  if(aux > 0){
+    ratio = 1.0;
+  } else {
+    ratio = exp(aux);
+  }
+
+  u = Rcpp::as<double>(runif(1, 0, 1));
+
+  if(u < ratio){
+    eps_samp(i) = eps(i);
+    eps_samp(N-1) = eps(N-1);
+    mu_samp(i) = mu(i);
+  } else {
+    eps_samp(i) = eps_prev(i);
+    mu_samp(i) = mu_prev(i);
+  }
 }
 
 //' @title dens_cpp
@@ -415,9 +544,11 @@ double dens_eps_pois_cpp(double x, Rcpp::List& params, int& ele, arma::vec& eps,
 //' @description To usage in MCMC estimation
 //'
 // [[Rcpp::export]]
-double dens_cpp(arma::vec x_beta, arma::vec x_eps, arma::vec x_rho, double x_nu, Rcpp::List& params, arma::vec& mu, arma::mat& cor_mat){
+double dens_cpp(arma::vec x_beta, arma::vec x_eps, arma::vec x_mu, arma::vec x_rho, double x_nu,
+                Rcpp::List& params, arma::mat& Q, arma::mat& sigma, arma::sp_mat& Qsparse){
   int i;
-  double out = 0.0, lambda, logdet, sign;
+  double out = 0.0, mu, logdet, sign;
+  double jaceps = 0.0;
 
   /// Arguments
   int N = params["N"];
@@ -434,33 +565,6 @@ double dens_cpp(arma::vec x_beta, arma::vec x_eps, arma::vec x_rho, double x_nu,
   double eta_nu = params["eta_nu"];
   double psi_nu = params["psi_nu"];
 
-  arma::mat Ws = params["Ws"];
-  arma::mat Wt = params["Wt"];
-
-  /// Auxiliar vector
-  arma::mat sigma_aux(N, N);
-  arma::mat dsigma(N, N);
-  arma::mat Q_aux(N, N);
-  arma::mat Q_ast(N, N);
-
-  sigma_aux.zeros();
-  dsigma.zeros();
-  Q_aux.zeros();
-  Q_ast.zeros();
-
-  /// Building matrix
-  buildQST_cpp(Q_aux, Ws, Wt, x_rho(0), x_rho(1), x_rho(2));
-  // arma::sp_mat Qsparse(Q_aux);
-
-  //Solve Q
-  sigma_aux = arma::inv_sympd(Q_aux);
-  dsigma = arma::diagmat(sigma_aux);
-  dsigma = 1/sqrt(dsigma);
-  dsigma = arma::diagmat(dsigma);
-
-  cor_mat = dsigma*sigma_aux*dsigma;
-  arma::sp_mat Qsparse(cor_mat);
-
   /// Auxiliar vector
   arma::vec Xbet(N);
 
@@ -471,80 +575,70 @@ double dens_cpp(arma::vec x_beta, arma::vec x_eps, arma::vec x_rho, double x_nu,
   x_nu = exp(x_nu);
 
   for(i = 0; i < N; i++){
-    // if(type == 1) lambda = R::qgamma(R::pnorm(x_eps(i), 0, sqrt(sigma_aux(i, i)), 1, 1), x_nu, exp(Xbet(i))/x_nu, 1, 1);
-    // if(type == 2) lambda = R::qgamma(R::pnorm(x_eps(i), 0, sqrt(sigma_aux(i, i)), 1, 1), exp(Xbet(i))*x_nu, 1/x_nu, 1, 1);
-    // if(type == 3) lambda = R::qgamma(R::pnorm(x_eps(i), 0, sqrt(sigma_aux(i, i)), 1, 1), exp(Xbet(i))*exp(Xbet(i))*x_nu, 1/(x_nu*exp(Xbet(i))), 1, 1);
-    // if(type == 4) lambda = R::qlnorm(R::pnorm(x_eps(i), 0, sqrt(sigma_aux(i, i)), 1, 1), Xbet(i), sqrt(sigma_aux(i, i)/x_nu), 1, 1);
-    // if(type == 5) lambda = R::qweibull(R::pnorm(x_eps(i), 0, sqrt(sigma_aux(i, i)), 1, 1), 1/x_nu, exp(Xbet(i)), 1, 1);
-    // if(type == 6) lambda = R::qweibull(R::pnorm(x_eps(i), 0, sqrt(sigma_aux(i, i)), 1, 1), exp(Xbet(i)), 1/x_nu, 1, 1);
+    if(type == 1){
+      mu = R::qgamma(R::pnorm(x_eps(i), 0, sqrt(sigma(i, i)), 1, 1), x_nu, exp(Xbet(i))/x_nu, 1, 1);
+      // jaceps = R::dnorm(x_eps(i), 0, sqrt(sigma(i, i)), 1) - R::dgamma(mu, x_nu, exp(Xbet(i))/x_nu, 1);
+    }
+    if(type == 2){
+      mu = R::qgamma(R::pnorm(x_eps(i), 0, sqrt(sigma(i, i)), 1, 1), exp(Xbet(i))*x_nu, 1/x_nu, 1, 1);
+      // jaceps = R::dnorm(x_eps(i), 0, sqrt(sigma(i, i)), 1) - R::dgamma(mu, exp(Xbet(i))*x_nu, 1/x_nu, 1);
+    }
+    if(type == 3){
+      mu = R::qgamma(R::pnorm(x_eps(i), 0, sqrt(sigma(i, i)), 1, 1), exp(Xbet(i))*exp(Xbet(i))*x_nu, 1/(x_nu*exp(Xbet(i))), 1, 1);
+      // jaceps = R::dnorm(x_eps(i), 0, sqrt(sigma(i, i)), 1) - R::dgamma(mu, exp(Xbet(i))*exp(Xbet(i))*x_nu, 1/(x_nu*exp(Xbet(i))), 1);
+    }
+    if(type == 4){
+      mu = R::qlnorm(R::pnorm(x_eps(i), 0, sqrt(sigma(i, i)), 1, 1), Xbet(i), sqrt(sigma(i, i)/x_nu), 1, 1);
+      // jaceps = R::dnorm(x_eps(i), 0, sqrt(sigma(i, i)), 1) - R::dlnorm(mu, Xbet(i), sqrt(sigma(i, i)/x_nu), 1);
+    }
+    if(type == 5){
+      mu = R::qweibull(R::pnorm(x_eps(i), 0, sqrt(sigma(i, i)), 1, 1), 1/x_nu, exp(Xbet(i)), 1, 1);
+      // jaceps = R::dnorm(x_eps(i), 0, sqrt(sigma(i, i)), 1) - R::dweibull(mu, 1/x_nu, exp(Xbet(i)), 1);
+    }
+    if(type == 6){
+      mu = R::qweibull(R::pnorm(x_eps(i), 0, sqrt(sigma(i, i)), 1, 1), exp(Xbet(i)), 1/x_nu, 1, 1);
+      // jaceps = R::dnorm(x_eps(i), 0, sqrt(sigma(i, i)), 1) - R::dweibull(mu, exp(Xbet(i)), 1/x_nu, 1);
+    }
 
-    if(type == 1) lambda = R::qgamma(R::pnorm(x_eps(i), 0, 1, 1, 1), x_nu, exp(Xbet(i))/x_nu, 1, 1);
-    if(type == 2) lambda = R::qgamma(R::pnorm(x_eps(i), 0, 1, 1, 1), exp(Xbet(i))*x_nu, 1/x_nu, 1, 1);
-    if(type == 3) lambda = R::qgamma(R::pnorm(x_eps(i), 0, 1, 1, 1), exp(Xbet(i))*exp(Xbet(i))*x_nu, 1/(x_nu*exp(Xbet(i))), 1, 1);
-    if(type == 4) lambda = R::qlnorm(R::pnorm(x_eps(i), 0, 1, 1, 1), Xbet(i), sqrt(sigma_aux(i, i)/x_nu), 1, 1);
-    if(type == 5) lambda = R::qweibull(R::pnorm(x_eps(i), 0, 1, 1, 1), 1/x_nu, exp(Xbet(i)), 1, 1);
-    if(type == 6) lambda = R::qweibull(R::pnorm(x_eps(i), 0, 1, 1, 1), exp(Xbet(i)), 1/x_nu, 1, 1);
+    // x_eps(i) = eps;
+    // x_log_mu = x_log_mu + log(x_mu(i));
 
-    mu(i) = lambda;
-    out = out - e(i)*lambda + y(i)*log(lambda);
+    x_mu(i) = mu;
+    out = out - e(i)*x_mu(i) + y(i)*log(x_mu(i));/// + jaceps;
   }
 
-  arma::log_det(logdet, sign, cor_mat);
+  arma::log_det(logdet, sign, Q);
 
   out = out +
     0.5*logdet -                                                          /// rho
-    arma::as_scalar(0.5*arma::trans(x_eps)*Qsparse*x_eps) -               /// prior eps
-    arma::as_scalar(0.01/2.0 * (arma::trans(x_beta)*x_beta)) +            /// prior beta
+    arma::as_scalar(0.5*arma::trans(x_eps)*Qsparse*x_eps) -               /// eps|rho
+    // arma::as_scalar((0.1/2.0)*(arma::trans(x_beta)*x_beta)) +             /// prior beta
     (eta_nu - 1)*log(x_nu) - psi_nu*x_nu +                                /// prior nu
     log(x_nu);                                                            /// Jacobian nu
 
   return out;
 }
 
-void metropolis_eps(double xprev, Rcpp::List& params, arma::mat& varEps, int& ele, arma::vec& eps,
-                    double& nu, arma::sp_mat& Q, arma::mat& dsigma, arma::vec& Xbeta, double& xsamp){
-
-  double proposal, prevloglik, loglik, ratio, u;
-
-  proposal = Rcpp::as<double>(rnorm(1, xprev, sqrt(varEps(ele, ele))));
-
-  prevloglik = dens_eps_pois_cpp(xprev, params, ele, eps, nu, Q, dsigma, Xbeta);
-  loglik = dens_eps_pois_cpp(proposal, params, ele, eps, nu, Q, dsigma, Xbeta);
-
-  if((loglik - prevloglik) > 0){
-    ratio = 1.0;
-  } else{
-    ratio = exp(loglik - prevloglik);
-  }
-
-  u = Rcpp::as<double>(runif(1, 0, 1));
-
-  if(u < ratio){
-    xsamp = proposal;
-  } else{
-    xsamp = xprev;
-  }
-}
-
 void metropolis_cpp(arma::vec beta_prev, arma::vec eps_prev, arma::vec mu_prev, arma::vec rho_prev, double nu_prev,
                     Rcpp::List& params,
-                    arma::mat& varBeta, arma::mat& varEps, arma::mat& varRho, double& varLogNu,
-                    arma::vec& beta_samp, arma::vec& eps_samp, arma::vec& mu_samp, arma::vec& rho_samp, double& nu_samp, arma::mat& cor_mat,
+                    arma::mat& varBeta, arma::mat& varEps, arma::mat& varLogMu, arma::mat& varRho, double& varLogNu,
+                    arma::vec& beta_samp, arma::vec eps_samp, arma::vec mu_samp, arma::vec& rho_samp, double& nu_samp,
                     arma::vec& max_rho,
-                    double c_beta, double c_eps, double c_rho, double c_nu){
+                    arma::vec range_rho_s, arma::vec range_rho_t, arma::vec range_rho_st,
+                    int fix_rho_s, int fix_rho_t, int fix_rho_st,
+                    double c_beta, double c_eps, double c_mu, double c_rho, double c_nu,
+                    arma::mat& Q_prev, arma::mat& sigma_prev, arma::sp_mat& Qsparse_prev){
 
-  int j;
   double prevloglik, loglik, prevdens, dens, aux, ratio, u;
   arma::vec range(3);
-  arma::mat cor_mat_prev, cor_mat_prop;
   Rcpp::List range_list;
 
   int N = params["N"];
   int P = params["P"];
 
-  arma::vec beta_proposal(P);
-  arma::vec eps_proposal(N);
-  arma::vec mu_proposal(N);
+  // arma::vec beta_proposal(P);
+  // arma::vec eps_proposal(N);
+  // arma::vec mu_proposal(N);
   double nu_proposal;
   arma::vec rho_proposal(3);
 
@@ -552,35 +646,69 @@ void metropolis_cpp(arma::vec beta_prev, arma::vec eps_prev, arma::vec mu_prev, 
   arma::mat Wt = params["Wt"];
 
   // rho_s
-  range_list = max_range_cpp(Ws, Wt, 0, 0, 0);
-  range(0) = range_list["rho_s"];
-  rho_proposal(0) = rtruncnorm_cpp(-range(0), range(0), rho_prev(0), varRho(0, 0)*c_rho);
+  // range_list = max_range_cpp(Ws, Wt, 0, 0, 0);
+  // range(0) = range_list["rho_s"];
+  // rho_proposal(0) = rtruncnorm_cpp(-range(0), range(0), rho_prev(0), varRho(0, 0)*c_rho);
+  if(!fix_rho_s){
+    range_list = max_range_cpp(Ws, Wt, 0, 0, 0);
+    range(0) = range_list["rho_s"];
+    rho_proposal(0) = rtruncnorm_cpp(-range(0), range(0), rho_prev(0), varRho(0, 0)*c_rho);
+    // rho_proposal(0) = rtruncnorm_cpp(range_rho_s(0), range_rho_s(1), rho_prev(0), varRho(0, 0)*c_rho);
+  } else{
+    rho_proposal(0) = rho_prev(0);
+  }
 
   // rho_t
-  range_list = max_range_cpp(Ws, Wt, rho_proposal(0), 0, 0);
-  range(1) = range_list["rho_t"];
-  rho_proposal(1) = rtruncnorm_cpp(-range(1), range(1), rho_prev(1), varRho(1, 1)*c_rho);
+  // range_list = max_range_cpp(Ws, Wt, rho_proposal(0), 0, 0);
+  // range(1) = range_list["rho_t"];
+  // rho_proposal(1) = rtruncnorm_cpp(-range(1), range(1), rho_prev(1), varRho(1, 1)*c_rho);
+  if(!fix_rho_t){
+    range_list = max_range_cpp(Ws, Wt, rho_proposal(0), 0, 0);
+    range(1) = range_list["rho_t"];
+    rho_proposal(1) = rtruncnorm_cpp(-range(1), range(1), rho_prev(1), varRho(1, 1)*c_rho);
+    // rho_proposal(1) = rtruncnorm_cpp(range_rho_t(0), range_rho_t(1), rho_prev(1), varRho(1, 1)*c_rho);
+  } else{
+    rho_proposal(1) = rho_prev(1);
+  }
 
   // rho_st
-  range_list = max_range_cpp(Ws, Wt, rho_proposal(0), rho_proposal(1), 0);
-  range(2) = range_list["rho_st"];
-  rho_proposal(2) = rtruncnorm_cpp(-range(2), range(2), rho_prev(2), varRho(2, 2)*c_rho);
+  // range_list = max_range_cpp(Ws, Wt, rho_proposal(0), rho_proposal(1), 0);
+  // range(2) = range_list["rho_st"];
+  // rho_proposal(2) = rtruncnorm_cpp(-range(2), range(2), rho_prev(2), varRho(2, 2)*c_rho);
+  if(!fix_rho_st){
+    range_list = max_range_cpp(Ws, Wt, rho_proposal(0), rho_proposal(1), 0);
+    range(2) = range_list["rho_st"];
+    rho_proposal(2) = rtruncnorm_cpp(-range(2), range(2), rho_prev(2), varRho(2, 2)*c_rho);
+    // rho_proposal(2) = rtruncnorm_cpp(range_rho_st(0), range_rho_st(1), rho_prev(2), varRho(2, 2)*c_rho);
+  } else{
+    rho_proposal(2) = rho_prev(2);
+  }
 
   // rho_proposal = rho_prev;
 
   // rho's proposal is not symetric
-  prevdens = dtmvnorm_cpp(rho_prev, -1*max_rho, max_rho, rho_proposal, varRho*c_rho);
-  dens = dtmvnorm_cpp(rho_proposal, -1*max_rho, max_rho, rho_prev, varRho*c_rho);
+  prevdens = 0; ///dtmvnorm_cpp(rho_prev, -1*max_rho, max_rho, rho_proposal, varRho*c_rho);
+  dens = 0; ///dtmvnorm_cpp(rho_proposal, -1*max_rho, max_rho, rho_prev, varRho*c_rho);
 
-  // eps
-  // for(j = 0; j < N; j++){
-  //   eps_proposal(j) = Rcpp::as<double>(rnorm(1, eps_prev(j), sqrt(varEps(j, j)*c_eps)));
-  // }
-  eps_proposal = rmvnorm_cpp(varEps*c_eps) + eps_prev;
+  /// Auxiliar matrix
+  arma::mat sigma(N, N);
+  arma::mat Q(N, N);
+
+  sigma.zeros();
+  Q.zeros();
+
+  /// Building matrix
+  buildQST_cpp(Q, Ws, Wt, rho_proposal(0), rho_proposal(1), rho_proposal(2));
+
+  //Solve Q
+  sigma = arma::inv_sympd(Q);
+  arma::sp_mat Qsparse(Q);
+
+  // eps_proposal = rmvnorm_cpp(varEps*c_eps) + eps_prev;
   // eps_proposal = eps_prev;
 
   // beta
-  beta_proposal = rmvnorm_cpp(varBeta*c_beta) + beta_prev;
+  // beta_proposal = rmvnorm_cpp(varBeta*c_beta) + beta_prev;
   // beta_proposal = beta_prev;
 
   // nu
@@ -588,8 +716,8 @@ void metropolis_cpp(arma::vec beta_prev, arma::vec eps_prev, arma::vec mu_prev, 
   // nu_proposal = nu_prev;
 
   // likelihood
-  prevloglik = dens_cpp(beta_prev, eps_prev, rho_prev, nu_prev, params, mu_proposal, cor_mat_prev);
-  loglik = dens_cpp(beta_proposal, eps_proposal, rho_proposal, nu_proposal, params, mu_proposal, cor_mat_prop);
+  prevloglik = dens_cpp(beta_prev, eps_prev, mu_prev, rho_prev, nu_prev, params, Q_prev, sigma_prev, Qsparse_prev);
+  loglik = dens_cpp(beta_prev, eps_prev, mu_prev, rho_proposal, nu_proposal, params, Q, sigma, Qsparse);
 
   aux = loglik - prevloglik + prevdens - dens;
 
@@ -602,19 +730,23 @@ void metropolis_cpp(arma::vec beta_prev, arma::vec eps_prev, arma::vec mu_prev, 
   u = Rcpp::as<double>(runif(1, 0, 1));
 
   if(u < ratio){
-    beta_samp = beta_proposal;
-    eps_samp = eps_proposal;
-    mu_samp = mu_proposal;
+    // beta_samp = beta_proposal;
+    // eps_samp = eps_proposal;
+    // mu_samp = mu_proposal;
     nu_samp = nu_proposal;
     rho_samp = rho_proposal;
-    cor_mat = cor_mat_prop;
+    Q_prev = Q;
+    sigma_prev = sigma;
+    Qsparse_prev = Qsparse;
   } else {
-    beta_samp = beta_prev;
-    eps_samp = eps_prev;
-    mu_samp = mu_prev;
+    // beta_samp = beta_prev;
+    // eps_samp = eps_prev;
+    // mu_samp = mu_prev;
     nu_samp = nu_prev;
     rho_samp = rho_prev;
-    cor_mat = cor_mat_prev;
+    // Q_prev = Q_prev;
+    // sigma_prev = sigma_prev;
+    // Qsparse_prev = Qsparse_prev;
   }
 }
 
@@ -641,8 +773,9 @@ void metropolis_cpp(arma::vec beta_prev, arma::vec eps_prev, arma::vec mu_prev, 
 //' @param maxpoint Maximum number of evaluation in each ARMS iteration
 //' @param var_beta_met Variance of beta proposal
 //' @param var_eps_met Variance of eps proposal
-//' @param var_log_nu_met Variance of nu proposal
+//' @param var_log_mu_met Variance of log(mu) proposal
 //' @param var_rho_met Variance of rho proposal
+//' @param var_log_nu_met Variance of log(nu) proposal
 //' @param tau Vector of tau parameters to construct Q
 //'
 // [[Rcpp::export]]
@@ -656,23 +789,20 @@ Rcpp::List poimcar_cpp(int nsim, int burnin, int thin,
                        int fix_rho_s, int fix_rho_t, int fix_rho_st,
                        arma::vec range_rho_s, arma::vec range_rho_t, arma::vec range_rho_st,
                        int type,
-                       arma::mat var_beta_met, arma::mat var_eps_met, arma::mat var_rho_met, double var_log_nu_met,
+                       arma::mat var_beta_met, arma::mat var_eps_met, arma::mat var_log_mu_met, arma::mat var_rho_met, double var_log_nu_met,
                        int verbose,
-                       double c_beta, double c_eps, double c_nu, double c_rho){
+                       double c_beta, double c_eps, double c_mu, double c_nu, double c_rho){
 
-  int i, j, k = 0, l = 0, ntot, nt = 1;
+  int i = 0, j = 0, k = 0, l = 0, ntot = 0, nt = 1;
   int ele = 0;
   double Snu, Snuaux;
-  arma::vec Seps(N), Smu(N), Sbeta(P), Sbet(P), Srho(3), Xbeta(N);
+  arma::vec Seps(N), Smu(N), Smuaux(N), Sbeta(P), Srho(3), Xbeta(N);
   arma::vec max_rho(3);
   Rcpp::List range_aux;
-  arma::mat Q(N, N), Q_ast(N, N), sigma(N, N), dsigma(N, N), cor_mat(N, N);
+  arma::mat Q(N, N), sigma(N, N);
 
   Q.zeros();
-  Q_ast.zeros();
   sigma.zeros();
-  dsigma.zeros();
-  cor_mat.zeros();
 
   ntot = nsim*thin + burnin;
 
@@ -710,43 +840,42 @@ Rcpp::List poimcar_cpp(int nsim, int burnin, int thin,
     printf("Running...\n");
   }
 
+  /// Calculating Q and sigma
+  buildQST_cpp(Q, Ws, Wt, Srho(0), Srho(1), Srho(2));
+  sigma = arma::inv_sympd(Q);
+  arma::sp_mat Qsparse(Q);
+
   // Loop
   for(i = 0; i < ntot; i++){
-
-    /// Sampling beta, eps, rho and nu together
+    /// Sampling rho and nu together
     Snuaux = log(Snu);
     metropolis_cpp(Sbeta, Seps, Smu, Srho, Snuaux,
                    params,
-                   var_beta_met, var_eps_met, var_rho_met, var_log_nu_met,
-                   Sbeta, Seps, Smu, Srho, Snuaux, cor_mat,
+                   var_beta_met, var_eps_met, var_log_mu_met, var_rho_met, var_log_nu_met,
+                   Sbeta, Seps, Smu, Srho, Snuaux,
                    max_rho,
-                   c_beta, c_eps, c_rho, c_nu);
+                   range_rho_s, range_rho_t, range_rho_st,
+                   fix_rho_s, fix_rho_t, fix_rho_st,
+                   c_beta, c_eps, c_mu, c_rho, c_nu,
+                   Q, sigma, Qsparse);
     Snu = exp(Snuaux);
 
-    // // Build Q
-    // buildQST_cpp(Q, Ws, Wt, Srho(0), Srho(1), Srho(2));
-    // arma::sp_mat Qsparse(Q);
-    //
-    // // Solve Q
-    // sigma = arma::inv_sympd(Q);
-    // dsigma = arma::diagmat(sigma);
-    // dsigma = sqrt(dsigma);
-    //
-    // // Q_ast = dsigma*Q*dsigma;
-    // // arma::sp_mat Qsparse(Q_ast);
-    // // cor_mat = (1/dsigma);
-    // // cor_mat = arma::diagmat(cor_mat);
-    // // cor_mat = cor_mat*sigma*cor_mat;
-    //
-    // /// Re calculate Xbeta after sampling beta
-    // Xbeta = X*Sbeta;
-    //
-    // /// Sample eps
-    // for(j = 0; j < N; j++){
-    //   arma::mat var_aux = var_eps_met*c_eps;
-    //   // arma::mat var_aux = cor_mat;
-    //   metropolis_eps(Seps(j), params, var_aux, j, Seps, Snu, Qsparse, dsigma, Xbeta, Seps(j));
-    // }
+    /// Sampling beta
+    metropolis_beta_cpp(Sbeta, Seps, Snu,
+                        sigma,
+                        var_beta_met,
+                        Sbeta, c_beta,
+                        params);
+
+    /// Sampling eps
+    for(j = 0; j < (N-1); j++){
+      metropolis_eps_cpp(Sbeta, Seps, Smu, Srho, Snu,
+                         params,
+                         var_eps_met, var_log_mu_met,
+                         Seps, Smu,
+                         c_eps, c_mu,
+                         Q, sigma, Qsparse, j);
+    }
 
     /// Saving chain (+ 1 because vector start in position 0)
     if((i + 1) > burnin & (i + 1)%thin == 0){
@@ -764,27 +893,26 @@ Rcpp::List poimcar_cpp(int nsim, int burnin, int thin,
 
     beta_aux.row(l) = Sbeta.t();
     eps_aux.row(l) = Seps.t();
-    mu_aux.row(l) = Smu.t();
+    mu_aux.row(l) = Smuaux.t();
     rho_aux.row(l) = Srho.t();
     nu_aux(l) = Snuaux;
     l += 1;
 
     /// Recalculating variances
     if(i == stop_point & i < limit){
-
       nt = nt + 1;
 
       var_beta_met = var_beta_met*(nt - 1)/nt + cov(beta_aux.submat(0, 0, buffer-1, P-1))/nt;
-      // var_eps_met = var_eps_met*(nt - 1)/nt + cov(eps_aux.submat(0, 0, buffer-1, N-1))/nt;
-      var_eps_met = cor_mat;
+      var_eps_met = var_eps_met*(nt - 1)/nt + cov(eps_aux.submat(0, 0, buffer-1, N-1))/nt;
+      var_log_mu_met = var_log_mu_met*(nt - 1)/nt + cov(mu_aux.submat(0, 0, buffer-1, N-1))/nt;
+      var_rho_met = var_rho_met*(nt - 1)/nt + cov(rho_aux.submat(0, 0, buffer-1, 2))/nt;
 
       for(j = 0; j < P; j++) var_beta_met(j, j) += 0.00001;
-      // for(j = 0; j < N; j++) var_eps_met(j, j) += 0.00001;
+      for(j = 0; j < N; j++) var_eps_met(j, j) += 0.00001;
+      for(j = 0; j < N; j++) var_log_mu_met(j, j) += 0.00001;
+      for(j = 0; j < 3; j++) var_rho_met(j, j) += 0.00001;
 
       var_log_nu_met = var_log_nu_met*(nt - 1)/nt + arma::var(nu_aux.subvec(0, buffer-1))/nt + 0.00001;
-
-      var_rho_met = var_rho_met*(nt - 1)/nt + cov(rho_aux.submat(0, 0, buffer-1, 2))/nt;
-      for(j = 0; j < 3; j++) var_rho_met(j, j) += 0.00001;
 
       stop_point = stop_point + buffer;
     }
@@ -797,7 +925,6 @@ Rcpp::List poimcar_cpp(int nsim, int burnin, int thin,
         cont += 1;
       }
     }
-
   }
 
   return Rcpp::List::create(Rcpp::Named("beta") = beta_out,

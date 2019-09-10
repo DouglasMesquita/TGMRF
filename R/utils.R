@@ -202,11 +202,11 @@ buildQ <- function(Ws, Wt, tau, rho_s = 0.99, rho_t = 0.8, rho_st = 0){
   ind_nvar <- diag(nrow = n_var, ncol = n_var)
 
   out_diag <- rho_s*kronecker(Ws, ind_nvar) + rho_t*kronecker(ind_n, Wt) + rho_st*kronecker(Ws, Wt)
-  if(any(c(rho_s, rho_t, rho_st) != 0)){
-    D <- diag(colSums(abs(out_diag) > 0))
-  } else{
+  # if(any(c(rho_s, rho_t, rho_st) != 0)){
+  #   D <- diag(colSums(abs(out_diag) > 0))
+  # } else{
     D <- diag(colSums(kronecker(ind_n, Wt) + kronecker(Ws, Wt) + kronecker(Ws, ind_nvar)))
-  }
+  # }
 
   Q <- (D - out_diag)*(1/tau)
   return(Q)
@@ -276,7 +276,7 @@ max_range <- function(Ws, Wt, rho_s = NULL, rho_t = NULL, rho_st = NULL){
 #' @param y Second list
 #'
 #' @return x
-#'
+
 appendList <- function (x, y){
   xnames <- names(x)
   for (v in names(y)) {
@@ -289,4 +289,51 @@ appendList <- function (x, y){
     }
   }
   return(x)
+}
+
+#' @title Mode based on the empirical density
+#'
+#' @param x Numerical vector
+#' @param bw The smoothing bandwidth to be used
+#'
+#' @return m Mode
+
+mode <- function(x, bw = 0.1){
+  dens <- density(x = x, bw = bw)
+  m <- dens$x[which.max(dens$y)]
+
+  return(m)
+}
+
+#' @title First two moments of the outcome
+
+moments_outcome <- function(X, beta, nu, Q, type_data){
+  ##-- X*beta
+  Xbeta <- X%*%matrix(beta, ncol = 1)
+
+  ##-- Variances
+  if(type_data == "gamma-shape"){
+    mean_y <- exp(Xbeta)
+    var_y <- mean_y/nu
+  }
+  if(type_data == "gamma-scale"){
+    mean_y <- exp(Xbeta)
+    var_y <- exp(2)*mean_y/nu
+  }
+  if(type_data == "gamma-precision"){
+    mean_y <- exp(Xbeta)
+    var_y <- 1/nu
+  }
+  if(type_data == "log-normal"){
+    sigma <- solve(Q)
+    diag_sigma <- diag(sigma)
+
+    mean_y <- exp(Xbeta + sqrt(diag_sigma/nu)/2)
+    var_y <- (exp(sqrt(diag_sigma/nu)) - 1)*exp(2*Xbeta + diag_sigma/nu)
+  }
+
+  out <- cbind(mean_y, var_y)
+  colnames(out) <- c("mu", "var")
+
+  return(out)
 }

@@ -131,15 +131,16 @@
 tgmrf <- function(data, formula, neigh, scale = T,
                   spatial_var, neigh_order = NULL,
                   group_var = NULL,  change_vars = NULL,
-                  beta = NULL, nu = 1, eps = NULL,
+                  beta = NULL, nu = 1, eps = NULL, mu = NULL,
                   rho_s = 0, rho_t = 0, rho_st = 0,
                   tau = NULL,
                   family = "poisson", type = "gamma-shape", mat_type = "car", method = "metropolis",
                   nsim = 1000, burnin = 0, thin = 1,
                   E = NULL, n = 1,
-                  prior_param = NULL, MCMC_config = NULL, fix_rho = NULL, range = list("rho_s" = c(-1, 1), "rho_t" = c(-1, 1), "rho_st" = c(-1, 1)),
+                  prior_param = NULL, MCMC_config = NULL, fix_rho = NULL,
+                  range = list("rho_s" = c(-1, 1), "rho_t" = c(-1, 1), "rho_st" = c(-1, 1)),
                   verbose = FALSE,
-                  c_beta = NULL, c_eps = NULL, c_nu = NULL, c_rho = NULL){
+                  c_beta = NULL, c_eps = NULL, c_mu = NULL, c_nu = NULL, c_rho = NULL){
 
   ##-- Joining lists
   prior_param_dft <- list("nu" = list(shape = 0.1, rate = 0.1),
@@ -148,8 +149,9 @@ tgmrf <- function(data, formula, neigh, scale = T,
 
   if(is.null(group_var)){
     MCMC_config_dft <- list('arms' = list('ninit' = 5, 'maxpoint' = 100),
-                            'metropolis' = list('var_beta' = 0.1, 'var_eps' = 0.1, 'var_log_nu' = 0.003,
-                                                'var_rho' = 0.05))
+                            'metropolis' = list('var_beta' = 0.1, 'var_eps' = 0.1, 'var_log_mu' = 0.1,
+                                                'var_log_nu' = 0.1,
+                                                'var_rho' = 0.1))
     MCMC_config <- appendList(MCMC_config_dft, MCMC_config)
 
     ##--
@@ -160,7 +162,8 @@ tgmrf <- function(data, formula, neigh, scale = T,
     range <- appendList(range_dft, range)
   } else{
     MCMC_config_dft <- list('arms' = list('ninit' = 5, 'maxpoint' = 100),
-                            'metropolis' = list('var_beta' = 0.005, 'var_eps' = 0.025, 'var_log_nu' = 0.8,
+                            'metropolis' = list('var_beta' = 0.1, 'var_eps' = 0.1, 'var_log_mu' = 0.1,
+                                                'var_log_nu' = 0.1,
                                                 'var_rho' = c(0.1, 0.1, 0.1)))
     MCMC_config <- appendList(MCMC_config_dft, MCMC_config)
 
@@ -229,6 +232,7 @@ tgmrf <- function(data, formula, neigh, scale = T,
 
   if(is.null(c_beta)) c_beta <- (2.38^2)/P
   if(is.null(c_eps)) c_eps <- 2.38^2
+  if(is.null(c_mu)) c_mu <- 2.38^2
   if(is.null(c_nu)) c_nu <- 2.38^2
   if(is.null(c_rho)) c_rho <- (2.38^2)/3
 
@@ -264,7 +268,7 @@ tgmrf <- function(data, formula, neigh, scale = T,
 
   } else{
     out <- st_tgmrf(y = y, X = X, n_reg = n_reg, n_var = n_var,
-                    beta = beta, nu = nu, eps = eps,
+                    beta = beta, nu = nu, eps = eps, mu = mu,
                     rho_s = rho_s, rho_t = rho_t, rho_st = rho_st,
                     tau = tau,
                     family = family, type = type, mat_type = mat_type, method = method,
@@ -274,7 +278,7 @@ tgmrf <- function(data, formula, neigh, scale = T,
                     MCMC_config = MCMC_config,
                     fix_rho = fix_rho, range = range,
                     verbose = verbose,
-                    c_beta = c_beta, c_eps = c_eps, c_nu = c_nu, c_rho = c_rho)
+                    c_beta = c_beta, c_eps = c_eps, c_mu = c_mu, c_nu = c_nu, c_rho = c_rho)
   }
   final_time <- Sys.time()
   out$time_elapsed <- final_time - initial_time

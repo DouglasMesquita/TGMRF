@@ -1,4 +1,4 @@
-# TGMRF 0.1.11
+# TGMRF 0.1.13
 
-* Sampling in two blocks: (eps) and (beta, nu, rho)
+* Changing the blocks
 

@@ -30,7 +30,7 @@ devtools::install_github("DouglasMesquita/TGMRF")
 
 `library(TGMRF)` will load **tgmrf**, a function to fit Poisson
 regression models. The user can choose for several approaches to model
-the poisson intensities: **gamma-var**, **gamma-shape**, **gamma-scale**
+the poisson intensities: **gamma-precicison**, **gamma-shape**, **gamma-scale**
 and **log-normal**.
 
 See `?tgmrf` for examples.

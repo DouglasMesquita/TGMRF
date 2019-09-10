@@ -148,23 +148,28 @@ dtmvnorm_cpp <- function(x, a, b, mean, var) {
     .Call('_TGMRF_dtmvnorm_cpp', PACKAGE = 'TGMRF', x, a, b, mean, var)
 }
 
-#' @title dens_eps_pois_cpp
+#' @title dens_beta_cpp
 #'
 #' @description To usage in MCMC estimation
 #'
-#' @param x Point to restore the density
-#' @param params A list with some informations about the MCMC model.
+dens_beta_cpp <- function(x_beta, x_eps, x_nu, sigma, params) {
+    .Call('_TGMRF_dens_beta_cpp', PACKAGE = 'TGMRF', x_beta, x_eps, x_nu, sigma, params)
+}
+
+#' @title dens_eps_cpp
 #'
-dens_eps_pois_cpp <- function(x, params, ele, eps, nu, Q, dsigma, Xbeta) {
-    .Call('_TGMRF_dens_eps_pois_cpp', PACKAGE = 'TGMRF', x, params, ele, eps, nu, Q, dsigma, Xbeta)
+#' @description To usage in MCMC estimation
+#'
+dens_eps_cpp <- function(x_beta, x_eps, x_mu, x_rho, x_nu, params, Q, sigma, Qsparse, i) {
+    .Call('_TGMRF_dens_eps_cpp', PACKAGE = 'TGMRF', x_beta, x_eps, x_mu, x_rho, x_nu, params, Q, sigma, Qsparse, i)
 }
 
 #' @title dens_cpp
 #'
 #' @description To usage in MCMC estimation
 #'
-dens_cpp <- function(x_beta, x_eps, x_rho, x_nu, params, mu, cor_mat) {
-    .Call('_TGMRF_dens_cpp', PACKAGE = 'TGMRF', x_beta, x_eps, x_rho, x_nu, params, mu, cor_mat)
+dens_cpp <- function(x_beta, x_eps, x_mu, x_rho, x_nu, params, Q, sigma, Qsparse) {
+    .Call('_TGMRF_dens_cpp', PACKAGE = 'TGMRF', x_beta, x_eps, x_mu, x_rho, x_nu, params, Q, sigma, Qsparse)
 }
 
 #' @title POIMCAR
@@ -190,11 +195,12 @@ dens_cpp <- function(x_beta, x_eps, x_rho, x_nu, params, mu, cor_mat) {
 #' @param maxpoint Maximum number of evaluation in each ARMS iteration
 #' @param var_beta_met Variance of beta proposal
 #' @param var_eps_met Variance of eps proposal
-#' @param var_log_nu_met Variance of nu proposal
+#' @param var_log_mu_met Variance of log(mu) proposal
 #' @param var_rho_met Variance of rho proposal
+#' @param var_log_nu_met Variance of log(nu) proposal
 #' @param tau Vector of tau parameters to construct Q
 #'
-poimcar_cpp <- function(nsim, burnin, thin, eps, mu, beta, nu, rho_s, rho_t, rho_st, X, y, E, Ws, Wt, N, P, mean_beta, tau_beta, eta_nu, psi_nu, fix_rho_s, fix_rho_t, fix_rho_st, range_rho_s, range_rho_t, range_rho_st, type, var_beta_met, var_eps_met, var_rho_met, var_log_nu_met, verbose, c_beta, c_eps, c_nu, c_rho) {
-    .Call('_TGMRF_poimcar_cpp', PACKAGE = 'TGMRF', nsim, burnin, thin, eps, mu, beta, nu, rho_s, rho_t, rho_st, X, y, E, Ws, Wt, N, P, mean_beta, tau_beta, eta_nu, psi_nu, fix_rho_s, fix_rho_t, fix_rho_st, range_rho_s, range_rho_t, range_rho_st, type, var_beta_met, var_eps_met, var_rho_met, var_log_nu_met, verbose, c_beta, c_eps, c_nu, c_rho)
+poimcar_cpp <- function(nsim, burnin, thin, eps, mu, beta, nu, rho_s, rho_t, rho_st, X, y, E, Ws, Wt, N, P, mean_beta, tau_beta, eta_nu, psi_nu, fix_rho_s, fix_rho_t, fix_rho_st, range_rho_s, range_rho_t, range_rho_st, type, var_beta_met, var_eps_met, var_log_mu_met, var_rho_met, var_log_nu_met, verbose, c_beta, c_eps, c_mu, c_nu, c_rho) {
+    .Call('_TGMRF_poimcar_cpp', PACKAGE = 'TGMRF', nsim, burnin, thin, eps, mu, beta, nu, rho_s, rho_t, rho_st, X, y, E, Ws, Wt, N, P, mean_beta, tau_beta, eta_nu, psi_nu, fix_rho_s, fix_rho_t, fix_rho_st, range_rho_s, range_rho_t, range_rho_st, type, var_beta_met, var_eps_met, var_log_mu_met, var_rho_met, var_log_nu_met, verbose, c_beta, c_eps, c_mu, c_nu, c_rho)
 }
 
