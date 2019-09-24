@@ -329,7 +329,7 @@ moments_outcome <- function(X, beta, nu, Q, type_data){
     diag_sigma <- diag(sigma)
 
     mean_y <- exp(Xbeta + sqrt(diag_sigma/nu)/2)
-    var_y <- exp(diag_sigma/nu - 1)*exp(2*Xbeta + diag_sigma/nu)
+    var_y <- (exp(diag_sigma/nu) - 1)*exp(2*Xbeta + diag_sigma/nu)
   }
   if(type_data == "lognormal-precision"){
     mean_y <- exp(Xbeta + sqrt(1/nu)/2)
