@@ -44,7 +44,7 @@ tgmrf(data, formula, neigh, scale = T, spatial_var, neigh_order = NULL,
 \item{family}{'Poisson' or 'Binary'}
 
 \item{type}{Depends of family.
-'log-normal', 'gamma-shape', 'gamma-scale', 'weibull-shape', 'weibull-scale' for Poisson family
+'lognormal', 'lognormal-precision', 'gamma-shape', 'gamma-scale', 'weibull-shape', 'weibull-scale' for Poisson family
 'beta-logit', 'beta-probit', 'beta-alpha', 'beta-beta' for Binomial family}
 
 \item{mat_type}{car or leroux}
@@ -99,7 +99,7 @@ nu <- 0.3
 P <- length(betas)
 X <- scale(matrix(c(rnorm(n = rowid*colid*n_vars, mean = 0)), ncol = P))
 
-type_data <- 'log-normal'
+type_data <- 'lognormal'
 family <- 'poisson'
 seed <- 123456
 

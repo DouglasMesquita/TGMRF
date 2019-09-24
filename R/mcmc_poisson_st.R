@@ -18,7 +18,7 @@
 #' @param nsim Number of MCMC iterations
 #' @param burnin number of discards iterations
 #' @param thin Lag to collect the observations
-#' @param type 'log-normal', 'gamma-shape', 'gamma-scale', 'weibull-shape', 'weibull-scale'
+#' @param type 'lognormal', 'lognormal-precision', 'gamma-shape', 'gamma-scale', 'weibull-shape', 'weibull-scale'
 #' @param type_num A numeric that represent type in .C functions
 #' @param mat_type car or leroux
 #' @param mean_beta Prior mean of beta vector

@@ -11,7 +11,7 @@
 #' @param intercept Should use intercept? NULL or coefficiente
 #' @param nu Dispersion parameter for gamma models
 #' @param type_data Depends of family.
-#' 'log-normal', 'gamma-shape', 'gamma-scale', 'weibull-shape', 'weibull-scale' for Poisson family
+#' 'lognormal', 'lognormal-precision', 'gamma-shape', 'gamma-scale', 'weibull-shape', 'weibull-scale' for Poisson family
 #' 'beta-logit', 'beta-probit', 'beta-alpha', 'beta-beta' for Binomial family
 #' @param family 'poisson' or 'binary'
 #' @param seed A seed to reproduce the reuslts
@@ -68,9 +68,9 @@ rtgmrf <- function(rowid = 10, colid = 10, X = NULL, n_var = 1,
     stop("The neighbors musta belong to a nb class\n")
   }
   if(family == 'poisson' & !(type_data %in% c('gamma-shape', 'gamma-scale', 'gamma-precision',
-                                              'log-normal', 'weibull-scale', 'weibull-shape'))){
+                                              'lognormal', 'lognormal-precision', 'weibull-scale', 'weibull-shape'))){
     stop("The only models accepted for poisson family are: 'gamma-shape', 'gamma-scale', 'gamma-precision',
-                                              'log-normal', 'weibull-scale' or 'weibull-shape' \n ")
+                                              'lognormal', 'lognormal-precision', 'weibull-scale' or 'weibull-shape' \n ")
   }
   if(family == 'binary' & !(type_data %in% c('beta-logit', 'beta-probit', 'beta-alpha', 'beta-beta'))){
     stop("The only models accepted for binary family are: 'beta-logit', 'beta-probit',

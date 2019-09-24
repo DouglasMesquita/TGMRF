@@ -19,7 +19,7 @@
 #' @param rho_st Spatio-temporal dependence parameter
 #' @param family 'Poisson' or 'Binary'
 #' @param type Depends of family.
-#' 'log-normal', 'gamma-shape', 'gamma-scale', 'weibull-shape', 'weibull-scale' for Poisson family
+#' 'lognormal', 'lognormal-precision', 'gamma-shape', 'gamma-scale', 'weibull-shape', 'weibull-scale' for Poisson family
 #' 'beta-logit', 'beta-probit', 'beta-alpha', 'beta-beta' for Binomial family
 #' @param mat_type car or leroux
 #' @param method metropolis or arms
@@ -56,7 +56,7 @@
 #' P <- length(betas)
 #' X <- scale(matrix(c(rnorm(n = rowid*colid*n_vars, mean = 0)), ncol = P))
 #'
-#' type_data <- 'log-normal'
+#' type_data <- 'lognormal'
 #' family <- 'poisson'
 #' seed <- 123456
 #'

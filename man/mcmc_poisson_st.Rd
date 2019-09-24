@@ -44,7 +44,7 @@ mcmc_poisson_st(y, X, E, n_reg, n_var, neigh, beta, nu, eps, mu, rho_s,
 
 \item{thin}{Lag to collect the observations}
 
-\item{type}{'log-normal', 'gamma-shape', 'gamma-scale', 'weibull-shape', 'weibull-scale'}
+\item{type}{'lognormal', 'lognormal-precision', 'gamma-shape', 'gamma-scale', 'weibull-shape', 'weibull-scale'}
 
 \item{type_num}{A numeric that represent type in .C functions}
 

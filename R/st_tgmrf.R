@@ -14,7 +14,7 @@
 #' @param tau Vector of precisions of variables
 #' @param family 'Poisson' or 'Binary'
 #' @param type Depends of family.
-#' 'log-normal', 'gamma-shape', 'gamma-scale', 'weibull-shape', 'weibull-scale' for Poisson family
+#' 'lognormal', 'lognormal-precision', 'gamma-shape', 'gamma-scale', 'weibull-shape', 'weibull-scale' for Poisson family
 #' 'beta-logit', 'beta-probit', 'beta-alpha', 'beta-beta' for Binomial family
 #' @param mat_type car or leroux
 #' @param method 'arms' or 'metropolis'
@@ -134,9 +134,10 @@ st_tgmrf <- function(y, X, n_reg, n_var,
     if(type == "gamma-scale") type_num <- 1
     else if(type == "gamma-shape") type_num <- 2
     else if(type == "gamma-precision") type_num <- 3
-    else if(type == "log-normal") type_num <- 4
-    else if(type == "weibull-shape") type_num <- 5
-    else if(type == "weibull-scale") type_num <- 6
+    else if(type == "lognormal") type_num <- 4
+    else if(type == "lognormal-precision") type_num <- 5
+    else if(type == "weibull-shape") type_num <- 6
+    else if(type == "weibull-scale") type_num <- 7
     else stop("Family for the TGMRF not defined\n")
 
     out <- mcmc_poisson_st(y = y, X = X, E = E,

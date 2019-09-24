@@ -24,7 +24,7 @@ rtgmrf(rowid = 10, colid = 10, X = NULL, n_var = 1, neigh = NULL,
 \item{nu}{Dispersion parameter for gamma models}
 
 \item{type_data}{Depends of family.
-'log-normal', 'gamma-shape', 'gamma-scale', 'weibull-shape', 'weibull-scale' for Poisson family
+'lognormal', 'lognormal-precision', 'gamma-shape', 'gamma-scale', 'weibull-shape', 'weibull-scale' for Poisson family
 'beta-logit', 'beta-probit', 'beta-alpha', 'beta-beta' for Binomial family}
 
 \item{family}{'poisson' or 'binary'}

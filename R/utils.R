@@ -324,12 +324,24 @@ moments_outcome <- function(X, beta, nu, Q, type_data){
     mean_y <- exp(Xbeta)
     var_y <- 1/nu
   }
-  if(type_data == "log-normal"){
+  if(type_data == "lognormal"){
     sigma <- solve(Q)
     diag_sigma <- diag(sigma)
 
     mean_y <- exp(Xbeta + sqrt(diag_sigma/nu)/2)
-    var_y <- (exp(sqrt(diag_sigma/nu)) - 1)*exp(2*Xbeta + diag_sigma/nu)
+    var_y <- exp(diag_sigma/nu - 1)*exp(2*Xbeta + diag_sigma/nu)
+  }
+  if(type_data == "lognormal-precision"){
+    mean_y <- exp(Xbeta + sqrt(1/nu)/2)
+    var_y <- (exp(1/nu) - 1)*exp(2*Xbeta + 1/nu)
+  }
+  if(type_data == "weibull-scale"){
+    mean_y <- (1/nu)*gamma(1 + exp(-Xbeta))
+    var_y <- (1/nu^2)*(gamma(1 + 2*exp(-Xbeta)) - gamma(1 + exp(-Xbeta))^2)
+  }
+  if(type_data == "weibull-shape"){
+    mean_y <- (1/exp(Xbeta))*gamma(1 + exp(-nu))
+    var_y <- (1/exp(2*Xbeta))*(gamma(1 + 2*exp(-nu)) - gamma(1 + exp(-nu))^2)
   }
 
   out <- cbind(mean_y, var_y)

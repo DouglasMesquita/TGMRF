@@ -32,7 +32,7 @@ rtgmrf_st(rowid = 10, colid = 10, n_var = 2, X = NULL,
 \item{tau}{Vector of precisions of variables}
 
 \item{type_data}{Depends of family.
-'log-normal', 'gamma-shape', 'gamma-scale', 'weibull-shape', 'weibull-scale' for Poisson family
+'lognormal', 'lognormal-precision', 'gamma-shape', 'gamma-scale', 'weibull-shape', 'weibull-scale' for Poisson family
 'beta-logit', 'beta-probit', 'beta-alpha', 'beta-beta' for Binomial family}
 
 \item{family}{'poisson' or 'binary'}

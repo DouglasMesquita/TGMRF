@@ -14,7 +14,7 @@
 #' @param nu Dispersion parameter for gamma models
 #' @param tau Vector of precisions of variables
 #' @param type_data Depends of family.
-#' 'log-normal', 'gamma-shape', 'gamma-scale', 'weibull-shape', 'weibull-scale' for Poisson family
+#' 'lognormal', 'lognormal-precision', 'gamma-shape', 'gamma-scale', 'weibull-shape', 'weibull-scale' for Poisson family
 #' 'beta-logit', 'beta-probit', 'beta-alpha', 'beta-beta' for Binomial family
 #' @param family 'poisson' or 'binary'
 #' @param seed A seed to reproduce the reuslts
@@ -81,30 +81,13 @@ rtgmrf_st <- function(rowid = 10, colid = 10, n_var = 2, X = NULL,
   Xbeta <- as.vector(X%*%betas)
 
   if(family == 'poisson'){
-    if(type_data == 'gamma-scale'){
-      # mu <- qgamma(pnorm(eps, rep(0, N), sd = sqrt(diag(sigma))), shape = nu, scale = exp(Xbeta)/nu)
-      mu <- qgamma(pnorm(eps, rep(0, N), sd = sqrt(diag(sigma))), shape = nu, scale = exp(Xbeta)/nu)
-    }
-    if(type_data == 'gamma-shape'){
-      # mu <- qgamma(pnorm(eps, rep(0, N), sd = sqrt(diag(sigma))), shape = exp(Xbeta)*nu, scale = 1/nu)
-      mu <- qgamma(pnorm(eps, rep(0, N), sd = sqrt(diag(sigma))), shape = exp(Xbeta)*nu, scale = 1/nu)
-    }
-    if(type_data == 'gamma-precision'){
-      # mu <- qgamma(pnorm(eps, rep(0, N), sd = sqrt(diag(sigma))), shape = exp(Xbeta)^2*nu, scale = 1/(nu*exp(Xbeta)))
-      mu <- qgamma(pnorm(eps, rep(0, N), sd = sqrt(diag(sigma))), shape = exp(Xbeta)^2*nu, scale = 1/(nu*exp(Xbeta)))
-    }
-    if(type_data == 'log-normal'){
-      # mu <- qlnorm(pnorm(eps, rep(0, N), sd = sqrt(diag(sigma))), meanlog = Xbeta, sdlog = sqrt(diag(sigma)/nu))
-      mu <- qlnorm(pnorm(eps, rep(0, N), sd = sqrt(diag(sigma))), meanlog = Xbeta, sdlog = sqrt(diag(sigma)/nu))
-    }
-    if(type_data == 'weibull-scale'){
-      # mu <- qweibull(pnorm(eps, rep(0, N), sd = sqrt(diag(sigma))), shape = 1/nu, scale = exp(Xbeta))
-      mu <- qweibull(pnorm(eps, rep(0, N), sd = sqrt(diag(sigma))), shape = 1/nu, scale = exp(Xbeta))
-    }
-    if(type_data == 'weibull-shape'){
-      # mu <- qweibull(pnorm(eps, rep(0, N), sd = sqrt(diag(sigma))), shape = exp(Xbeta), scale = 1/nu)
-      mu <- qweibull(pnorm(eps, rep(0, N), sd = sqrt(diag(sigma))), shape = exp(Xbeta), scale = 1/nu)
-    }
+    if(type_data == 'gamma-scale') mu <- qgamma(pnorm(eps, rep(0, N), sd = sqrt(diag(sigma))), shape = nu, scale = exp(Xbeta)/nu)
+    if(type_data == 'gamma-shape') mu <- qgamma(pnorm(eps, rep(0, N), sd = sqrt(diag(sigma))), shape = exp(Xbeta)*nu, scale = 1/nu)
+    if(type_data == 'gamma-precision') mu <- qgamma(pnorm(eps, rep(0, N), sd = sqrt(diag(sigma))), shape = exp(Xbeta)^2*nu, scale = 1/(nu*exp(Xbeta)))
+    if(type_data == 'lognormal') mu <- qlnorm(pnorm(eps, rep(0, N), sd = sqrt(diag(sigma))), meanlog = Xbeta, sdlog = sqrt(diag(sigma)/nu))
+    if(type_data == 'lognormal-precision') mu <- qlnorm(pnorm(eps, rep(0, N), sd = sqrt(diag(sigma))), meanlog = Xbeta, sdlog = sqrt(1/nu))
+    if(type_data == 'weibull-scale') mu <- qweibull(pnorm(eps, rep(0, N), sd = sqrt(diag(sigma))), shape = 1/nu, scale = exp(Xbeta))
+    if(type_data == 'weibull-shape') mu <- qweibull(pnorm(eps, rep(0, N), sd = sqrt(diag(sigma))), shape = exp(Xbeta), scale = 1/nu)
 
     y <- rpois(n = N, lambda = mu)
   }
@@ -132,7 +115,7 @@ rtgmrf_st <- function(rowid = 10, colid = 10, n_var = 2, X = NULL,
   }
 
   if(!is.null(intercept)){
-    X <- X[,-1]
+    X <- X[,-1, drop = FALSE]
   }
 
   return(list(y = y, X = X, reg = rep(1:n_reg, each = n_var), var = rep(1:n_var, times = n_reg),

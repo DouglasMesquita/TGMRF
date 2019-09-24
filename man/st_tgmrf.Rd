@@ -33,7 +33,7 @@ st_tgmrf(y, X, n_reg, n_var, beta, nu, eps, mu, rho_s, rho_t, rho_st, tau,
 \item{family}{'Poisson' or 'Binary'}
 
 \item{type}{Depends of family.
-'log-normal', 'gamma-shape', 'gamma-scale', 'weibull-shape', 'weibull-scale' for Poisson family
+'lognormal', 'lognormal-precision', 'gamma-shape', 'gamma-scale', 'weibull-shape', 'weibull-scale' for Poisson family
 'beta-logit', 'beta-probit', 'beta-alpha', 'beta-beta' for Binomial family}
 
 \item{mat_type}{car or leroux}

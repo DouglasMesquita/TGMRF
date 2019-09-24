@@ -1,4 +1,4 @@
 # TGMRF 0.1.13
 
-* Changing the blocks
+* Changing the sampling blocks
 
