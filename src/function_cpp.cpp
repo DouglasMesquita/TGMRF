@@ -85,36 +85,6 @@ Rcpp::List max_range_cpp(arma::mat Ws, arma::mat Wt, double rho_s, double rho_t,
   return params;
 }
 
-//' @title cov
-//'
-//' @description Covariance matrix
-//'
-//' @param A Matrix to calculate covariances
-//' @param B Matrix to restore covariance
-//'
-// [[Rcpp::export]]
-void cov_cpp(arma::mat A, arma::mat& B) {
-  int nrows = A.n_rows;
-  int ncolumns = A.n_cols;
-  int i, j, k;
-  double sum;
-
-  for(i = 0; i < ncolumns; i++){
-    for(sum = 0, k = 0; k < nrows; k++) sum += A(k,i);
-    sum = sum/nrows;
-
-    for(k = 0; k < nrows; k++) A(k,i) -= sum;
-
-    for(j = 0; j <= i; j++){
-      for(k = 0; k < nrows; k++){
-        B(i,j) += A(k,i) * A(k,j);
-      }
-      B(i,j) = B(i,j)/nrows;
-      B(j,i) = B(i,j);
-    }
-  }
-}
-
 //' @title buildQC_cpp
 //'
 //' @description CAR covariance matrix
@@ -277,28 +247,6 @@ arma::vec rtmvnorm_cpp(arma::vec a, arma::vec b, arma::vec mean, arma::mat var){
   return res;
 }
 
-//' @title dtruncnorm
-//'
-//' @description To restore a point density of a truncated normal
-//'
-//' @param a Lower bound
-//' @param b Upper bound
-//' @param mean Normal expectation
-//' @param var Normal variance
-//' @param x Point to evaluate the density
-//'
-// [[Rcpp::export]]
-double dtruncnorm(double x, double a, double b, double mean, double var){
-  double acumA, acumB, aux, dens;
-
-  aux = R::dnorm(x, mean, sqrt(var), FALSE);
-  acumA = R::pnorm(a, mean, sqrt(var), TRUE, FALSE);
-  acumB = R::pnorm(b, mean, sqrt(var), TRUE, FALSE);
-  dens = aux/(acumB-acumA);
-
-  return(log(dens));
-}
-
 //' @title dtruncnorm_cpp
 //'
 //' @description To get the density of a truncated normal
@@ -310,11 +258,13 @@ double dtruncnorm(double x, double a, double b, double mean, double var){
 //' @param x Point to evaluate the density
 //
 // [[Rcpp::export]]
-double dtruncnorm_cpp(double x, double a, double b, double mean, double var){
+double dtruncnorm_cpp(double x, double a, double b, double mean, double var, int l){
   Rcpp::Environment truncnorm("package:truncnorm");
   Rcpp::Function dtruncnorm = truncnorm["dtruncnorm"];
 
   double res = Rcpp::as<double>(dtruncnorm(x, a, b, mean, sqrt(var)));
+
+  if(l) res = log(res);
 
   return res;
 }
@@ -361,7 +311,7 @@ double dtmvnorm_cpp(arma::vec x, arma::vec a, arma::vec b, arma::vec mean, arma:
 double dens_beta_cpp(arma::vec x_beta, arma::vec x_eps, double x_nu, arma::mat sigma,
                      Rcpp::List& params){
   int i;
-  double out = 0.0, mu = 0.0, jacmu = 0.0, x_log_mu = 0.0;
+  double out = 0.0, mu = 0.0;
 
   /// Arguments
   int N = params["N"];
@@ -400,8 +350,7 @@ double dens_beta_cpp(arma::vec x_beta, arma::vec x_eps, double x_nu, arma::mat s
   return out;
 }
 
-void metropolis_beta_cpp(arma::vec beta_prev, arma::vec eps_prev, double nu_prev,
-                         arma::mat sigma,
+void metropolis_beta_cpp(arma::vec beta_prev, arma::vec eps_prev, double nu_prev, arma::mat sigma,
                          arma::mat& varBeta, arma::vec& beta_samp, double c_beta,
                          Rcpp::List& params){
 
@@ -441,8 +390,9 @@ void metropolis_beta_cpp(arma::vec beta_prev, arma::vec eps_prev, double nu_prev
 //' @description To usage in MCMC estimation
 //'
 // [[Rcpp::export]]
-double dens_eps_cpp(arma::vec x_beta, arma::vec& x_eps, arma::vec& x_mu, arma::vec x_rho, double x_nu,
-                    Rcpp::List& params, arma::mat& Q, arma::mat& sigma, arma::sp_mat& Qsparse, int i){
+double dens_eps_cpp(arma::vec x_beta, arma::vec& x_eps, arma::vec& x_mu, double x_nu,
+                    arma::mat& Q, arma::mat& sigma, arma::sp_mat& Qsparse, int i,
+                    Rcpp::List& params){
   double out = 0.0, mu, logdet, sign;
   double jaceps = 0.0;
 
@@ -479,13 +429,10 @@ double dens_eps_cpp(arma::vec x_beta, arma::vec& x_eps, arma::vec& x_mu, arma::v
   return out;
 }
 
-void metropolis_eps_cpp(arma::vec beta_prev, arma::vec eps_prev, arma::vec mu_prev, arma::vec rho_prev, double nu_prev,
-                        Rcpp::List& params,
-                        arma::mat& varEps, arma::mat& varLogMu,
-                        arma::vec& eps_samp, arma::vec& mu_samp,
-                        double c_eps, double c_mu,
-                        arma::mat& Q_prev, arma::mat& sigma_prev, arma::sp_mat& Qsparse_prev,
-                        int i){
+void metropolis_eps_cpp(arma::vec beta_prev, arma::vec eps_prev, arma::vec mu_prev, double nu_prev,
+                        arma::mat& Q_prev, arma::mat& sigma_prev, arma::sp_mat& Qsparse_prev, int i,
+                        arma::mat& varEps, arma::vec& eps_samp, arma::vec& mu_samp, double c_eps,
+                        Rcpp::List& params){
 
   double prevloglik, loglik, prevdens, dens, aux, ratio, u;
 
@@ -506,8 +453,8 @@ void metropolis_eps_cpp(arma::vec beta_prev, arma::vec eps_prev, arma::vec mu_pr
   eps(N-1) = -sum(eps.subvec(0, (N-2)));
 
   // likelihood
-  prevloglik = dens_eps_cpp(beta_prev, eps_prev, mu, rho_prev, nu_prev, params, Q_prev, sigma_prev, Qsparse_prev, i);
-  loglik = dens_eps_cpp(beta_prev, eps, mu, rho_prev, nu_prev, params, Q_prev, sigma_prev, Qsparse_prev, i);
+  prevloglik = dens_eps_cpp(beta_prev, eps_prev, mu, nu_prev, Q_prev, sigma_prev, Qsparse_prev, i, params);
+  loglik = dens_eps_cpp(beta_prev, eps, mu, nu_prev, Q_prev, sigma_prev, Qsparse_prev, i, params);
 
   aux = loglik - prevloglik;
 
@@ -534,8 +481,8 @@ void metropolis_eps_cpp(arma::vec beta_prev, arma::vec eps_prev, arma::vec mu_pr
 //' @description To usage in MCMC estimation
 //'
 // [[Rcpp::export]]
-double dens_cpp(arma::vec x_beta, arma::vec x_eps, arma::vec x_mu, arma::vec x_rho, double x_nu,
-                Rcpp::List& params, arma::mat& Q, arma::mat& sigma, arma::sp_mat& Qsparse){
+double dens_rho_nu_cpp(arma::vec x_beta, arma::vec x_eps, arma::vec x_mu, arma::vec x_rho, double x_nu,
+                       arma::mat& Q, arma::mat& sigma, arma::sp_mat& Qsparse, Rcpp::List& params){
   int i;
   double out = 0.0, mu, logdet, sign;
   double jaceps = 0.0;
@@ -588,17 +535,17 @@ double dens_cpp(arma::vec x_beta, arma::vec x_eps, arma::vec x_mu, arma::vec x_r
   return out;
 }
 
-void metropolis_cpp(arma::vec beta_prev, arma::vec eps_prev, arma::vec mu_prev, arma::vec rho_prev, double nu_prev,
-                    Rcpp::List& params,
-                    arma::mat& varBeta, arma::mat& varEps, arma::mat& varLogMu, arma::mat& varRho, double& varLogNu,
-                    arma::vec& beta_samp, arma::vec eps_samp, arma::vec mu_samp, arma::vec& rho_samp, double& nu_samp,
-                    arma::vec& max_rho,
-                    arma::vec range_rho_s, arma::vec range_rho_t, arma::vec range_rho_st,
-                    int fix_rho_s, int fix_rho_t, int fix_rho_st,
-                    double c_beta, double c_eps, double c_mu, double c_rho, double c_nu,
-                    arma::mat& Q_prev, arma::mat& sigma_prev, arma::sp_mat& Qsparse_prev){
+void metropolis_rho_nu_cpp(arma::vec beta_prev, arma::vec eps_prev, arma::vec mu_prev, arma::vec rho_prev, double nu_prev,
+                           arma::mat& Q_prev, arma::mat& sigma_prev, arma::sp_mat& Qsparse_prev,
+                           arma::mat& varRho, double& varLogNu,
+                           arma::vec& max_rho, arma::vec& range_prev, arma::vec range_rho_s, arma::vec range_rho_t, arma::vec range_rho_st,
+                           int fix_rho_s, int fix_rho_t, int fix_rho_st,
+                           double c_rho, double c_nu,
+                           arma::vec& rho_samp, double& nu_samp,
+                           Rcpp::List& params){
 
-  double prevloglik, loglik, prevdens, dens, aux, ratio, u;
+  double prevloglik, loglik, aux, ratio, u;
+  arma::vec prevdens(3), dens(3);
   arma::vec range(3);
   Rcpp::List range_list;
 
@@ -616,8 +563,14 @@ void metropolis_cpp(arma::vec beta_prev, arma::vec eps_prev, arma::vec mu_prev, 
     range_list = max_range_cpp(Ws, Wt, 0, 0, 0);
     range(0) = range_list["rho_s"];
     rho_proposal(0) = rtruncnorm_cpp(-range(0), range(0), rho_prev(0), varRho(0, 0)*c_rho);
+
+    prevdens(0) = dtruncnorm_cpp(rho_prev(0), -range_prev(0), range_prev(0), rho_proposal(0), varRho(0, 0)*c_rho, 1L);
+    dens(0) = dtruncnorm_cpp(rho_proposal(0), -range(0), range(0), rho_prev(0), varRho(0, 0)*c_rho, 1L);
   } else{
     rho_proposal(0) = rho_prev(0);
+
+    prevdens(0) = 0;
+    dens(0) = 0;
   }
 
   // rho_t
@@ -625,8 +578,14 @@ void metropolis_cpp(arma::vec beta_prev, arma::vec eps_prev, arma::vec mu_prev, 
     range_list = max_range_cpp(Ws, Wt, rho_proposal(0), 0, 0);
     range(1) = range_list["rho_t"];
     rho_proposal(1) = rtruncnorm_cpp(-range(1), range(1), rho_prev(1), varRho(1, 1)*c_rho);
+
+    prevdens(1) = dtruncnorm_cpp(rho_prev(1), -range_prev(1), range_prev(1), rho_proposal(1), varRho(1, 1)*c_rho, 1L);
+    dens(1) = dtruncnorm_cpp(rho_proposal(1), -range(1), range(1), rho_prev(1), varRho(1, 1)*c_rho, 1L);
   } else{
     rho_proposal(1) = rho_prev(1);
+
+    prevdens(1) = 0;
+    dens(1) = 0;
   }
 
   // rho_st
@@ -634,13 +593,22 @@ void metropolis_cpp(arma::vec beta_prev, arma::vec eps_prev, arma::vec mu_prev, 
     range_list = max_range_cpp(Ws, Wt, rho_proposal(0), rho_proposal(1), 0);
     range(2) = range_list["rho_st"];
     rho_proposal(2) = rtruncnorm_cpp(-range(2), range(2), rho_prev(2), varRho(2, 2)*c_rho);
+
+    prevdens(2) = dtruncnorm_cpp(rho_prev(2), -range_prev(2), range_prev(2), rho_proposal(2), varRho(2, 2)*c_rho, 1L);
+    dens(2) = dtruncnorm_cpp(rho_proposal(2), -range(2), range(2), rho_prev(2), varRho(2, 2)*c_rho, 1L);
   } else{
     rho_proposal(2) = rho_prev(2);
+
+    prevdens(2) = 0;
+    dens(2) = 0;
   }
 
   // rho's proposal is not symetric
-  prevdens = dtmvnorm_cpp(rho_prev, -1*max_rho, max_rho, rho_proposal, varRho*c_rho);
-  dens = dtmvnorm_cpp(rho_proposal, -1*max_rho, max_rho, rho_prev, varRho*c_rho);
+  // double a1, a2;
+  // a1 = dtmvnorm_cpp(rho_prev, -1*max_rho, max_rho, rho_proposal, varRho*c_rho);
+  // a2 = dtmvnorm_cpp(rho_proposal, -1*max_rho, max_rho, rho_prev, varRho*c_rho);
+  //
+  // printf("%f - %f \n", a1, a2);
 
   /// Auxiliar matrix
   arma::mat sigma(N, N);
@@ -660,10 +628,11 @@ void metropolis_cpp(arma::vec beta_prev, arma::vec eps_prev, arma::vec mu_prev, 
   nu_proposal = Rcpp::as<double>(rnorm(1, nu_prev, sqrt(varLogNu*c_nu)));
 
   // likelihood
-  prevloglik = dens_cpp(beta_prev, eps_prev, mu_prev, rho_prev, nu_prev, params, Q_prev, sigma_prev, Qsparse_prev);
-  loglik = dens_cpp(beta_prev, eps_prev, mu_prev, rho_proposal, nu_proposal, params, Q, sigma, Qsparse);
+  prevloglik = dens_rho_nu_cpp(beta_prev, eps_prev, mu_prev, rho_prev, nu_prev, Q_prev, sigma_prev, Qsparse_prev, params);
+  loglik = dens_rho_nu_cpp(beta_prev, eps_prev, mu_prev, rho_proposal, nu_proposal, Q, sigma, Qsparse, params);
 
-  aux = loglik - prevloglik + prevdens - dens;
+  // aux = loglik - prevloglik + prevdens - dens;
+  aux = loglik - prevloglik + prevdens(0) + prevdens(1) + prevdens(2) - dens(0) - dens(1) - dens(2);
 
   if(aux > 0){
     ratio = 1.0;
@@ -679,6 +648,7 @@ void metropolis_cpp(arma::vec beta_prev, arma::vec eps_prev, arma::vec mu_prev, 
     Q_prev = Q;
     sigma_prev = sigma;
     Qsparse_prev = Qsparse;
+    range_prev = range;
   } else {
     nu_samp = nu_prev;
     rho_samp = rho_prev;
@@ -708,7 +678,6 @@ void metropolis_cpp(arma::vec beta_prev, arma::vec eps_prev, arma::vec mu_prev, 
 //' @param maxpoint Maximum number of evaluation in each ARMS iteration
 //' @param var_beta_met Variance of beta proposal
 //' @param var_eps_met Variance of eps proposal
-//' @param var_log_mu_met Variance of log(mu) proposal
 //' @param var_rho_met Variance of rho proposal
 //' @param var_log_nu_met Variance of log(nu) proposal
 //' @param tau Vector of tau parameters to construct Q
@@ -729,10 +698,9 @@ Rcpp::List poimcar_cpp(int nsim, int burnin, int thin,
                        double c_beta, double c_eps, double c_mu, double c_nu, double c_rho){
 
   int i = 0, j = 0, k = 0, l = 0, ntot = 0, nt = 1;
-  int ele = 0;
   double Snu, Snuaux;
-  arma::vec Seps(N), Smu(N), Smuaux(N), Sbeta(P), Srho(3), Xbeta(N);
-  arma::vec max_rho(3);
+  arma::vec Seps(N), Smu(N), Sbeta(P), Srho(3), Xbeta(N);
+  arma::vec max_rho(3), range(3);
   Rcpp::List range_aux;
   arma::mat Q(N, N), sigma(N, N);
 
@@ -770,6 +738,7 @@ Rcpp::List poimcar_cpp(int nsim, int burnin, int thin,
   max_rho(0) = range_aux["rho_s"];
   max_rho(1) = range_aux["rho_t"];
   max_rho(2) = range_aux["rho_st"];
+  range = max_rho;
 
   if(verbose){
     printf("Running...\n");
@@ -784,15 +753,14 @@ Rcpp::List poimcar_cpp(int nsim, int burnin, int thin,
   for(i = 0; i < ntot; i++){
     /// Sampling rho and nu together
     Snuaux = log(Snu);
-    metropolis_cpp(Sbeta, Seps, Smu, Srho, Snuaux,
-                   params,
-                   var_beta_met, var_eps_met, var_log_mu_met, var_rho_met, var_log_nu_met,
-                   Sbeta, Seps, Smu, Srho, Snuaux,
-                   max_rho,
-                   range_rho_s, range_rho_t, range_rho_st,
-                   fix_rho_s, fix_rho_t, fix_rho_st,
-                   c_beta, c_eps, c_mu, c_rho, c_nu,
-                   Q, sigma, Qsparse);
+    metropolis_rho_nu_cpp(Sbeta, Seps, Smu, Srho, Snuaux,
+                          Q, sigma, Qsparse,
+                          var_rho_met, var_log_nu_met,
+                          max_rho, range, range_rho_s, range_rho_t, range_rho_st,
+                          fix_rho_s, fix_rho_t, fix_rho_st,
+                          c_rho, c_nu,
+                          Srho, Snuaux,
+                          params);
     Snu = exp(Snuaux);
 
     /// Sampling beta
@@ -804,12 +772,11 @@ Rcpp::List poimcar_cpp(int nsim, int burnin, int thin,
 
     /// Sampling eps
     for(j = 0; j < (N-1); j++){
-      metropolis_eps_cpp(Sbeta, Seps, Smu, Srho, Snu,
-                         params,
-                         var_eps_met, var_log_mu_met,
-                         Seps, Smu,
-                         c_eps, c_mu,
-                         Q, sigma, Qsparse, j);
+      metropolis_eps_cpp(Sbeta, Seps, Smu, Snu,
+                         Q, sigma, Qsparse, j,
+                         var_eps_met,
+                         Seps, Smu, c_eps,
+                         params);
     }
 
     /// Saving chain (+ 1 because vector start in position 0)
@@ -828,7 +795,7 @@ Rcpp::List poimcar_cpp(int nsim, int burnin, int thin,
 
     beta_aux.row(l) = Sbeta.t();
     eps_aux.row(l) = Seps.t();
-    mu_aux.row(l) = Smuaux.t();
+    mu_aux.row(l) = Smu.t();
     rho_aux.row(l) = Srho.t();
     nu_aux(l) = Snuaux;
     l += 1;
@@ -839,13 +806,18 @@ Rcpp::List poimcar_cpp(int nsim, int burnin, int thin,
 
       var_beta_met = var_beta_met*(nt - 1)/nt + cov(beta_aux.submat(0, 0, buffer-1, P-1))/nt;
       var_eps_met = var_eps_met*(nt - 1)/nt + cov(eps_aux.submat(0, 0, buffer-1, N-1))/nt;
-      var_log_mu_met = var_log_mu_met*(nt - 1)/nt + cov(mu_aux.submat(0, 0, buffer-1, N-1))/nt;
       var_rho_met = var_rho_met*(nt - 1)/nt + cov(rho_aux.submat(0, 0, buffer-1, 2))/nt;
 
       for(j = 0; j < P; j++) var_beta_met(j, j) += 0.00001;
       for(j = 0; j < N; j++) var_eps_met(j, j) += 0.00001;
-      for(j = 0; j < N; j++) var_log_mu_met(j, j) += 0.00001;
       for(j = 0; j < 3; j++) var_rho_met(j, j) += 0.00001;
+
+      // var_rho_met(0, 1) = 0;
+      // var_rho_met(0, 2) = 0;
+      // var_rho_met(1, 0) = 0;
+      // var_rho_met(1, 2) = 0;
+      // var_rho_met(2, 0) = 0;
+      // var_rho_met(2, 1) = 0;
 
       var_log_nu_met = var_log_nu_met*(nt - 1)/nt + arma::var(nu_aux.subvec(0, buffer-1))/nt + 0.00001;
 

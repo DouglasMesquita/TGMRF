@@ -176,7 +176,7 @@ tgmrf <- function(data, formula, neigh, scale = T,
   }
 
   ##-- Checking parameters
-  if(any(abs(unlist(range)) > 1)) stop("range should be a list of range vectors (rho_s, rho_t, rho_st) in the range (-1, 1)")
+  # if(any(abs(unlist(range)) > 1)) stop("range should be a list of range vectors (rho_s, rho_t, rho_st) in the range (-1, 1)")
 
   if(!is.data.frame(data)) stop("data must be a data.frame")
   if(!(class(neigh) %in% c("nb", "matrix"))) stop("neigh must be a object of class nb or a matrix")

@@ -10,7 +10,9 @@ CPO_Poisson <- function(y, lambda){
   niter <- length(lambda)
   px <- dpois(x = y, lambda = lambda)
   px <- ifelse(px < .Machine$double.eps, .Machine$double.eps, px)
+
   cpo <- niter/sum(1/px, na.rm = T)
+
   return(cpo)
 }
 
@@ -22,10 +24,10 @@ CPO_Poisson <- function(y, lambda){
 #' @return LPML -2 * Log Pseudo Marginal Likelihood measure
 
 LPML <- function(y, lambda){
-  aux <- data.frame(y, t(lambda))
-  CPO <- apply(X = aux, MARGIN = 1,
-               FUN = function(x) CPO_Poisson(y = x[1], lambda = x[-1]))
+  aux <- cbind(y, t(lambda))
+  CPO <- apply(X = aux, MARGIN = 1, FUN = function(x) CPO_Poisson(y = x[1], lambda = x[-1]))
   LPML <- sum(log(CPO), na.rm = T)
+
   return(-2*LPML)
 }
 
@@ -38,16 +40,17 @@ LPML <- function(y, lambda){
 
 DIC <- function(y, lambda){
   niter <- nrow(lambda)
-  thetaBayes <- colMeans(lambda)
-  log_px <- dpois(x = y, lambda = thetaBayes, log = TRUE)
-  log_px <- sum(log_px, na.rm = T)
-  lambda <- cbind(y, t(lambda))
-  esp_log_px <- apply(lambda, MARGIN = 1,
-                      FUN = function(x) dpois(x = x[1], lambda = x[-1], log = TRUE))
-  esp_log_px <- sum(esp_log_px, na.rm = T)/niter
+  theta_bayes <- colMeans(lambda)
+
+  log_px <- sum(dpois(x = y, lambda = theta_bayes, log = TRUE), na.rm = TRUE)
+
+  aux <- cbind(y, t(lambda))
+  esp_log_px <- apply(aux, MARGIN = 1, FUN = function(x) mean(dpois(x = x[1], lambda = x[-1], log = TRUE), na.rm = TRUE))
+  esp_log_px <- sum(esp_log_px)
 
   pDIC <- 2*(log_px - esp_log_px)
   DIC <- -2*log_px + 2*pDIC
+
   return(DIC)
 }
 
@@ -60,15 +63,18 @@ DIC <- function(y, lambda){
 
 WAIC <- function(y, lambda){
   aux <- data.frame(y, t(lambda))
-  px <- apply(aux, MARGIN = 1,
-              FUN = function(x) dpois(x = x[1], lambda = x[-1]))
+
+  px <- apply(aux, MARGIN = 1, FUN = function(x) dpois(x = x[1], lambda = x[-1]))
   px <- ifelse(px < .Machine$double.eps, .Machine$double.eps, px)
   log_px <- log(px)
+
   lppd <- sum(log(colMeans(px, na.rm = T)))
   mean_log_px <- colMeans(log_px, na.rm = T)
   log_mean_px <- log(colMeans(px, na.rm = T))
+
   pWAIC <- 2*sum(log_mean_px - mean_log_px)
   WAIC <- -2*(lppd - pWAIC)
+
   return(WAIC)
 }
 

@@ -21,17 +21,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// cov_cpp
-void cov_cpp(arma::mat A, arma::mat& B);
-RcppExport SEXP _TGMRF_cov_cpp(SEXP ASEXP, SEXP BSEXP) {
-BEGIN_RCPP
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat >::type A(ASEXP);
-    Rcpp::traits::input_parameter< arma::mat& >::type B(BSEXP);
-    cov_cpp(A, B);
-    return R_NilValue;
-END_RCPP
-}
 // buildQC_cpp
 arma::mat buildQC_cpp(arma::vec M, arma::mat W, arma::vec rho);
 RcppExport SEXP _TGMRF_buildQC_cpp(SEXP MSEXP, SEXP WSEXP, SEXP rhoSEXP) {
@@ -111,24 +100,9 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// dtruncnorm
-double dtruncnorm(double x, double a, double b, double mean, double var);
-RcppExport SEXP _TGMRF_dtruncnorm(SEXP xSEXP, SEXP aSEXP, SEXP bSEXP, SEXP meanSEXP, SEXP varSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< double >::type x(xSEXP);
-    Rcpp::traits::input_parameter< double >::type a(aSEXP);
-    Rcpp::traits::input_parameter< double >::type b(bSEXP);
-    Rcpp::traits::input_parameter< double >::type mean(meanSEXP);
-    Rcpp::traits::input_parameter< double >::type var(varSEXP);
-    rcpp_result_gen = Rcpp::wrap(dtruncnorm(x, a, b, mean, var));
-    return rcpp_result_gen;
-END_RCPP
-}
 // dtruncnorm_cpp
-double dtruncnorm_cpp(double x, double a, double b, double mean, double var);
-RcppExport SEXP _TGMRF_dtruncnorm_cpp(SEXP xSEXP, SEXP aSEXP, SEXP bSEXP, SEXP meanSEXP, SEXP varSEXP) {
+double dtruncnorm_cpp(double x, double a, double b, double mean, double var, int l);
+RcppExport SEXP _TGMRF_dtruncnorm_cpp(SEXP xSEXP, SEXP aSEXP, SEXP bSEXP, SEXP meanSEXP, SEXP varSEXP, SEXP lSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -137,7 +111,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type b(bSEXP);
     Rcpp::traits::input_parameter< double >::type mean(meanSEXP);
     Rcpp::traits::input_parameter< double >::type var(varSEXP);
-    rcpp_result_gen = Rcpp::wrap(dtruncnorm_cpp(x, a, b, mean, var));
+    Rcpp::traits::input_parameter< int >::type l(lSEXP);
+    rcpp_result_gen = Rcpp::wrap(dtruncnorm_cpp(x, a, b, mean, var, l));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -172,28 +147,27 @@ BEGIN_RCPP
 END_RCPP
 }
 // dens_eps_cpp
-double dens_eps_cpp(arma::vec x_beta, arma::vec& x_eps, arma::vec& x_mu, arma::vec x_rho, double x_nu, Rcpp::List& params, arma::mat& Q, arma::mat& sigma, arma::sp_mat& Qsparse, int i);
-RcppExport SEXP _TGMRF_dens_eps_cpp(SEXP x_betaSEXP, SEXP x_epsSEXP, SEXP x_muSEXP, SEXP x_rhoSEXP, SEXP x_nuSEXP, SEXP paramsSEXP, SEXP QSEXP, SEXP sigmaSEXP, SEXP QsparseSEXP, SEXP iSEXP) {
+double dens_eps_cpp(arma::vec x_beta, arma::vec& x_eps, arma::vec& x_mu, double x_nu, arma::mat& Q, arma::mat& sigma, arma::sp_mat& Qsparse, int i, Rcpp::List& params);
+RcppExport SEXP _TGMRF_dens_eps_cpp(SEXP x_betaSEXP, SEXP x_epsSEXP, SEXP x_muSEXP, SEXP x_nuSEXP, SEXP QSEXP, SEXP sigmaSEXP, SEXP QsparseSEXP, SEXP iSEXP, SEXP paramsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< arma::vec >::type x_beta(x_betaSEXP);
     Rcpp::traits::input_parameter< arma::vec& >::type x_eps(x_epsSEXP);
     Rcpp::traits::input_parameter< arma::vec& >::type x_mu(x_muSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type x_rho(x_rhoSEXP);
     Rcpp::traits::input_parameter< double >::type x_nu(x_nuSEXP);
-    Rcpp::traits::input_parameter< Rcpp::List& >::type params(paramsSEXP);
     Rcpp::traits::input_parameter< arma::mat& >::type Q(QSEXP);
     Rcpp::traits::input_parameter< arma::mat& >::type sigma(sigmaSEXP);
     Rcpp::traits::input_parameter< arma::sp_mat& >::type Qsparse(QsparseSEXP);
     Rcpp::traits::input_parameter< int >::type i(iSEXP);
-    rcpp_result_gen = Rcpp::wrap(dens_eps_cpp(x_beta, x_eps, x_mu, x_rho, x_nu, params, Q, sigma, Qsparse, i));
+    Rcpp::traits::input_parameter< Rcpp::List& >::type params(paramsSEXP);
+    rcpp_result_gen = Rcpp::wrap(dens_eps_cpp(x_beta, x_eps, x_mu, x_nu, Q, sigma, Qsparse, i, params));
     return rcpp_result_gen;
 END_RCPP
 }
-// dens_cpp
-double dens_cpp(arma::vec x_beta, arma::vec x_eps, arma::vec x_mu, arma::vec x_rho, double x_nu, Rcpp::List& params, arma::mat& Q, arma::mat& sigma, arma::sp_mat& Qsparse);
-RcppExport SEXP _TGMRF_dens_cpp(SEXP x_betaSEXP, SEXP x_epsSEXP, SEXP x_muSEXP, SEXP x_rhoSEXP, SEXP x_nuSEXP, SEXP paramsSEXP, SEXP QSEXP, SEXP sigmaSEXP, SEXP QsparseSEXP) {
+// dens_rho_nu_cpp
+double dens_rho_nu_cpp(arma::vec x_beta, arma::vec x_eps, arma::vec x_mu, arma::vec x_rho, double x_nu, arma::mat& Q, arma::mat& sigma, arma::sp_mat& Qsparse, Rcpp::List& params);
+RcppExport SEXP _TGMRF_dens_rho_nu_cpp(SEXP x_betaSEXP, SEXP x_epsSEXP, SEXP x_muSEXP, SEXP x_rhoSEXP, SEXP x_nuSEXP, SEXP QSEXP, SEXP sigmaSEXP, SEXP QsparseSEXP, SEXP paramsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -202,11 +176,11 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< arma::vec >::type x_mu(x_muSEXP);
     Rcpp::traits::input_parameter< arma::vec >::type x_rho(x_rhoSEXP);
     Rcpp::traits::input_parameter< double >::type x_nu(x_nuSEXP);
-    Rcpp::traits::input_parameter< Rcpp::List& >::type params(paramsSEXP);
     Rcpp::traits::input_parameter< arma::mat& >::type Q(QSEXP);
     Rcpp::traits::input_parameter< arma::mat& >::type sigma(sigmaSEXP);
     Rcpp::traits::input_parameter< arma::sp_mat& >::type Qsparse(QsparseSEXP);
-    rcpp_result_gen = Rcpp::wrap(dens_cpp(x_beta, x_eps, x_mu, x_rho, x_nu, params, Q, sigma, Qsparse));
+    Rcpp::traits::input_parameter< Rcpp::List& >::type params(paramsSEXP);
+    rcpp_result_gen = Rcpp::wrap(dens_rho_nu_cpp(x_beta, x_eps, x_mu, x_rho, x_nu, Q, sigma, Qsparse, params));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -262,19 +236,17 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_TGMRF_max_range_cpp", (DL_FUNC) &_TGMRF_max_range_cpp, 5},
-    {"_TGMRF_cov_cpp", (DL_FUNC) &_TGMRF_cov_cpp, 2},
     {"_TGMRF_buildQC_cpp", (DL_FUNC) &_TGMRF_buildQC_cpp, 3},
     {"_TGMRF_buildQL_cpp", (DL_FUNC) &_TGMRF_buildQL_cpp, 2},
     {"_TGMRF_buildQST_cpp", (DL_FUNC) &_TGMRF_buildQST_cpp, 6},
     {"_TGMRF_rmvnorm_cpp", (DL_FUNC) &_TGMRF_rmvnorm_cpp, 1},
     {"_TGMRF_rtruncnorm_cpp", (DL_FUNC) &_TGMRF_rtruncnorm_cpp, 4},
     {"_TGMRF_rtmvnorm_cpp", (DL_FUNC) &_TGMRF_rtmvnorm_cpp, 4},
-    {"_TGMRF_dtruncnorm", (DL_FUNC) &_TGMRF_dtruncnorm, 5},
-    {"_TGMRF_dtruncnorm_cpp", (DL_FUNC) &_TGMRF_dtruncnorm_cpp, 5},
+    {"_TGMRF_dtruncnorm_cpp", (DL_FUNC) &_TGMRF_dtruncnorm_cpp, 6},
     {"_TGMRF_dtmvnorm_cpp", (DL_FUNC) &_TGMRF_dtmvnorm_cpp, 5},
     {"_TGMRF_dens_beta_cpp", (DL_FUNC) &_TGMRF_dens_beta_cpp, 5},
-    {"_TGMRF_dens_eps_cpp", (DL_FUNC) &_TGMRF_dens_eps_cpp, 10},
-    {"_TGMRF_dens_cpp", (DL_FUNC) &_TGMRF_dens_cpp, 9},
+    {"_TGMRF_dens_eps_cpp", (DL_FUNC) &_TGMRF_dens_eps_cpp, 9},
+    {"_TGMRF_dens_rho_nu_cpp", (DL_FUNC) &_TGMRF_dens_rho_nu_cpp, 9},
     {"_TGMRF_poimcar_cpp", (DL_FUNC) &_TGMRF_poimcar_cpp, 39},
     {NULL, NULL, 0}
 };

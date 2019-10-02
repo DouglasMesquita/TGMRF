@@ -57,17 +57,6 @@ max_range_cpp <- function(Ws, Wt, rho_s, rho_t, rho_st) {
     .Call('_TGMRF_max_range_cpp', PACKAGE = 'TGMRF', Ws, Wt, rho_s, rho_t, rho_st)
 }
 
-#' @title cov
-#'
-#' @description Covariance matrix
-#'
-#' @param A Matrix to calculate covariances
-#' @param B Matrix to restore covariance
-#'
-cov_cpp <- function(A, B) {
-    invisible(.Call('_TGMRF_cov_cpp', PACKAGE = 'TGMRF', A, B))
-}
-
 #' @title buildQC_cpp
 #'
 #' @description CAR covariance matrix
@@ -126,22 +115,8 @@ rtmvnorm_cpp <- function(a, b, mean, var) {
     .Call('_TGMRF_rtmvnorm_cpp', PACKAGE = 'TGMRF', a, b, mean, var)
 }
 
-#' @title dtruncnorm
-#'
-#' @description To restore a point density of a truncated normal
-#'
-#' @param a Lower bound
-#' @param b Upper bound
-#' @param mean Normal expectation
-#' @param var Normal variance
-#' @param x Point to evaluate the density
-#'
-dtruncnorm <- function(x, a, b, mean, var) {
-    .Call('_TGMRF_dtruncnorm', PACKAGE = 'TGMRF', x, a, b, mean, var)
-}
-
-dtruncnorm_cpp <- function(x, a, b, mean, var) {
-    .Call('_TGMRF_dtruncnorm_cpp', PACKAGE = 'TGMRF', x, a, b, mean, var)
+dtruncnorm_cpp <- function(x, a, b, mean, var, l) {
+    .Call('_TGMRF_dtruncnorm_cpp', PACKAGE = 'TGMRF', x, a, b, mean, var, l)
 }
 
 dtmvnorm_cpp <- function(x, a, b, mean, var) {
@@ -160,16 +135,16 @@ dens_beta_cpp <- function(x_beta, x_eps, x_nu, sigma, params) {
 #'
 #' @description To usage in MCMC estimation
 #'
-dens_eps_cpp <- function(x_beta, x_eps, x_mu, x_rho, x_nu, params, Q, sigma, Qsparse, i) {
-    .Call('_TGMRF_dens_eps_cpp', PACKAGE = 'TGMRF', x_beta, x_eps, x_mu, x_rho, x_nu, params, Q, sigma, Qsparse, i)
+dens_eps_cpp <- function(x_beta, x_eps, x_mu, x_nu, Q, sigma, Qsparse, i, params) {
+    .Call('_TGMRF_dens_eps_cpp', PACKAGE = 'TGMRF', x_beta, x_eps, x_mu, x_nu, Q, sigma, Qsparse, i, params)
 }
 
 #' @title dens_cpp
 #'
 #' @description To usage in MCMC estimation
 #'
-dens_cpp <- function(x_beta, x_eps, x_mu, x_rho, x_nu, params, Q, sigma, Qsparse) {
-    .Call('_TGMRF_dens_cpp', PACKAGE = 'TGMRF', x_beta, x_eps, x_mu, x_rho, x_nu, params, Q, sigma, Qsparse)
+dens_rho_nu_cpp <- function(x_beta, x_eps, x_mu, x_rho, x_nu, Q, sigma, Qsparse, params) {
+    .Call('_TGMRF_dens_rho_nu_cpp', PACKAGE = 'TGMRF', x_beta, x_eps, x_mu, x_rho, x_nu, Q, sigma, Qsparse, params)
 }
 
 #' @title POIMCAR
@@ -195,7 +170,6 @@ dens_cpp <- function(x_beta, x_eps, x_mu, x_rho, x_nu, params, Q, sigma, Qsparse
 #' @param maxpoint Maximum number of evaluation in each ARMS iteration
 #' @param var_beta_met Variance of beta proposal
 #' @param var_eps_met Variance of eps proposal
-#' @param var_log_mu_met Variance of log(mu) proposal
 #' @param var_rho_met Variance of rho proposal
 #' @param var_log_nu_met Variance of log(nu) proposal
 #' @param tau Vector of tau parameters to construct Q

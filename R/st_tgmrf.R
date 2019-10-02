@@ -123,12 +123,12 @@ st_tgmrf <- function(y, X, n_reg, n_var,
     stop("maxpoint must be a numeric > 0")
   if(var_log_nu <= 0)
     stop("var_log_nu must be a numeric > 0")
-  if(rho_s < range_rho_s[1] | rho_s > range_rho_s[2])
-    stop("rho_s must be in the interval defined in range$rho_s")
-  if(rho_t < range_rho_t[1] | rho_t > range_rho_t[2])
-    stop("rho_t must be in the interval defined in range$rho_t")
-  if(rho_st < range_rho_st[1] | rho_st > range_rho_st[2])
-    stop("rho_st must be in the interval defined in range$rho_st")
+  # if(rho_s < range_rho_s[1] | rho_s > range_rho_s[2])
+  #   stop("rho_s must be in the interval defined in range$rho_s")
+  # if(rho_t < range_rho_t[1] | rho_t > range_rho_t[2])
+  #   stop("rho_t must be in the interval defined in range$rho_t")
+  # if(rho_st < range_rho_st[1] | rho_st > range_rho_st[2])
+  #   stop("rho_st must be in the interval defined in range$rho_st")
 
   if(family == "poisson"){
     if(type == "gamma-scale") type_num <- 1
