@@ -37,8 +37,6 @@ poimcar_cpp(nsim, burnin, thin, eps, mu, beta, nu, rho_s, rho_t, rho_st, X,
 
 \item{var_eps_met}{Variance of eps proposal}
 
-\item{var_log_mu_met}{Variance of log(mu) proposal}
-
 \item{var_rho_met}{Variance of rho proposal}
 
 \item{var_log_nu_met}{Variance of log(nu) proposal}

@@ -127,24 +127,32 @@ dtmvnorm_cpp <- function(x, a, b, mean, var) {
 #'
 #' @description To usage in MCMC estimation
 #'
-dens_beta_cpp <- function(x_beta, x_eps, x_nu, sigma, params) {
-    .Call('_TGMRF_dens_beta_cpp', PACKAGE = 'TGMRF', x_beta, x_eps, x_nu, sigma, params)
+dens_beta_cpp <- function(x_beta, Xbeta, x_eps, x_nu, sigma, params) {
+    .Call('_TGMRF_dens_beta_cpp', PACKAGE = 'TGMRF', x_beta, Xbeta, x_eps, x_nu, sigma, params)
 }
 
 #' @title dens_eps_cpp
 #'
 #' @description To usage in MCMC estimation
 #'
-dens_eps_cpp <- function(x_beta, x_eps, x_mu, x_nu, Q, sigma, Qsparse, i, params) {
-    .Call('_TGMRF_dens_eps_cpp', PACKAGE = 'TGMRF', x_beta, x_eps, x_mu, x_nu, Q, sigma, Qsparse, i, params)
+dens_eps_cpp <- function(x_Xbeta, x_eps, x_mu, x_nu, Q, sigma, Qsparse, i, params) {
+    .Call('_TGMRF_dens_eps_cpp', PACKAGE = 'TGMRF', x_Xbeta, x_eps, x_mu, x_nu, Q, sigma, Qsparse, i, params)
+}
+
+#' @title dens_nu_cpp
+#'
+#' @description To usage in MCMC estimation
+#'
+dens_nu_cpp <- function(x_Xbeta, x_eps, x_nu, sigma, params) {
+    .Call('_TGMRF_dens_nu_cpp', PACKAGE = 'TGMRF', x_Xbeta, x_eps, x_nu, sigma, params)
 }
 
 #' @title dens_cpp
 #'
 #' @description To usage in MCMC estimation
 #'
-dens_rho_nu_cpp <- function(x_beta, x_eps, x_mu, x_rho, x_nu, Q, sigma, Qsparse, params) {
-    .Call('_TGMRF_dens_rho_nu_cpp', PACKAGE = 'TGMRF', x_beta, x_eps, x_mu, x_rho, x_nu, Q, sigma, Qsparse, params)
+dens_rho_cpp <- function(x_Xbeta, x_eps, x_rho, x_nu, Q, sigma, Qsparse, params) {
+    .Call('_TGMRF_dens_rho_cpp', PACKAGE = 'TGMRF', x_Xbeta, x_eps, x_rho, x_nu, Q, sigma, Qsparse, params)
 }
 
 #' @title POIMCAR

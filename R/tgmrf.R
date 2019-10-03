@@ -230,11 +230,11 @@ tgmrf <- function(data, formula, neigh, scale = T,
 
   P <- ncol(X)
 
-  if(is.null(c_beta)) c_beta <- (2.38^2)/P
-  if(is.null(c_eps)) c_eps <- 2.38^2
-  if(is.null(c_mu)) c_mu <- 2.38^2
-  if(is.null(c_nu)) c_nu <- 2.38^2
-  if(is.null(c_rho)) c_rho <- (2.38^2)/3
+  if(is.null(c_beta)) c_beta <- 1/P
+  if(is.null(c_eps)) c_eps <- 1
+  if(is.null(c_mu)) c_mu <- 1
+  if(is.null(c_nu)) c_nu <- 1
+  if(is.null(c_rho)) c_rho <- rep(1, 3)
 
   if(is.null(beta)) beta <- rep(0, P)
   if(is.null(E)) E <- rep(1, N)
