@@ -599,6 +599,13 @@ void metropolis_rho_cpp(arma::vec Xbeta_prev, arma::vec eps_prev, arma::vec rho_
   arma::mat Ws = params["Ws"];
   arma::mat Wt = params["Wt"];
 
+  /// Auxiliar matrix
+  arma::mat sigma(N, N);
+  arma::mat Q(N, N);
+
+  sigma.zeros();
+  Q.zeros();
+
   while(accept == 0){
     // printf("prev: %f - %f - %f \n", rho_prev(0), rho_prev(1), rho_prev(2));
     // rho_proposal = rtmvnorm_cpp(-max_rho, max_rho, rho_prev, varRho);
@@ -631,32 +638,27 @@ void metropolis_rho_cpp(arma::vec Xbeta_prev, arma::vec eps_prev, arma::vec rho_
       rho_proposal(2) = rho_prev(2);
     }
 
-    range_list = max_range_cpp(Ws, Wt, rho_proposal(0), rho_proposal(1), rho_proposal(2));
-    range(0) = range_list["rho_s"];
-    range(1) = range_list["rho_t"];
-    range(2) = range_list["rho_st"];
-    double tot = range_list["tot"];
+    // range_list = max_range_cpp(Ws, Wt, rho_proposal(0), rho_proposal(1), rho_proposal(2));
+    // range(0) = range_list["rho_s"];
+    // range(1) = range_list["rho_t"];
+    // range(2) = range_list["rho_st"];
+    // double tot = range_list["tot"];
+    //
+    // if(tot > 0) accept = 1;
 
-    if(tot > 0) accept = 1;
+    /// Building matrix
+    buildQST_cpp(Q, Ws, Wt, rho_proposal(0), rho_proposal(1), rho_proposal(2));
+
+    if(Q.is_sympd()) accept = 1;
   }
-
-  // rho's proposal is not symetric
-  // prevdens = dtmvnorm_cpp(rho_prev, -1*max_rho, max_rho, rho_proposal, varRho);
-  // dens = dtmvnorm_cpp(rho_proposal, -1*max_rho, max_rho, rho_prev, varRho);
-
-  /// Auxiliar matrix
-  arma::mat sigma(N, N);
-  arma::mat Q(N, N);
-
-  sigma.zeros();
-  Q.zeros();
-
-  /// Building matrix
-  buildQST_cpp(Q, Ws, Wt, rho_proposal(0), rho_proposal(1), rho_proposal(2));
 
   //Solve Q
   sigma = arma::inv_sympd(Q);
   arma::sp_mat Qsparse(Q);
+
+  // rho's proposal is not symetric
+  // prevdens = dtmvnorm_cpp(rho_prev, -1*max_rho, max_rho, rho_proposal, varRho);
+  // dens = dtmvnorm_cpp(rho_proposal, -1*max_rho, max_rho, rho_prev, varRho);
 
   // likelihood
   prevloglik = dens_rho_cpp(Xbeta_prev, eps_prev, rho_prev, nu_prev, Q_prev, sigma_prev, Qsparse_prev, params);
@@ -767,6 +769,7 @@ Rcpp::List poimcar_cpp(int nsim, int burnin, int thin,
   max_rho(0) = range_aux["rho_s"];
   max_rho(1) = range_aux["rho_t"];
   max_rho(2) = range_aux["rho_st"];
+  max_rho = max_rho*2;
 
   /// Calculating Q and sigma
   buildQST_cpp(Q, Ws, Wt, Srho(0), Srho(1), Srho(2));

@@ -68,10 +68,6 @@ rtgmrf_st <- function(rowid = 10, colid = 10, n_var = 2, X = NULL,
     colnames(X) <- c("(Intercept)", paste0('X', 1:P))
   }
 
-  # if(abs(rho_s) > 1 | abs(rho_t) > 1 | abs(rho_st) > 1){
-  #   stop("rho_s, rho_t and rho_st must be numbers between -1 and 1")
-  # }
-
   Q <- buildQ(Ws = Ws, Wt = Wt, tau = tau, rho_s = rho_s, rho_t = rho_t, rho_st = rho_st)
   sigma <- solve(Q)
 
