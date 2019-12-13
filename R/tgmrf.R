@@ -140,7 +140,8 @@ tgmrf <- function(data, formula, neigh, scale = T,
                   prior_param = NULL, MCMC_config = NULL, fix_rho = NULL,
                   range = list("rho_s" = c(-1, 1), "rho_t" = c(-1, 1), "rho_st" = c(-1, 1)),
                   verbose = FALSE,
-                  c_beta = NULL, c_eps = NULL, c_mu = NULL, c_nu = NULL, c_rho = NULL){
+                  c_beta = NULL, c_eps = NULL, c_mu = NULL, c_nu = NULL, c_rho = NULL,
+                  conj_beta = TRUE){
 
   ##-- Joining lists
   prior_param_dft <- list("nu" = list(shape = 0.1, rate = 0.1),
@@ -196,25 +197,35 @@ tgmrf <- function(data, formula, neigh, scale = T,
     data <- data[order(data[, spatial_var]),]
   }
 
-  call_tgmrf <- match.call()
+  # model_fr <- match.call(expand.dots = FALSE)
+  # match_strings <- match(c("formula", "data"), names(model_fr), 0L)
+  # model_fr <- model_fr[c(1L, match_strings)]
+  # model_fr[[1L]] <- quote(stats::model.frame)
+  # model_fr <- eval(model_fr, parent.frame())
+  # model_types <- attr(model_fr, "terms")
+  # y <- model.response(model_fr, "numeric")
+  # X <- model.matrix(model_types, model_fr)
 
-  model_fr <- match.call(expand.dots = FALSE)
-  match_strings <- match(c("formula", "data"), names(model_fr), 0L)
-  model_fr <- model_fr[c(1L, match_strings)]
-  model_fr[[1L]] <- quote(stats::model.frame)
-  model_fr <- eval(model_fr, parent.frame())
-  model_types <- attr(model_fr, "terms")
-  y <- model.response(model_fr, "numeric")
-  X <- model.matrix(model_types, model_fr)
+  call_tgmrf <- match.call()
+  formula <- as.formula(formula)
+
+  y_name <- all.vars(formula)[1]
+  y <- data[[y_name]]
 
   if(scale){
-    if("(Intercept)" %in% colnames(X) | "(Intercept)" %in% names(X)){
-      pos <- which(colnames(X) == "(Intercept)")
-      X <- cbind("(Intercept)" = 1, scale(X[,-pos]))
-    } else{
-      X <- scale(X)
-    }
+    data <- scale_num(x = data, except = y_name)
   }
+
+  X <- model.matrix(object = formula, data = data)
+
+  # if(scale){
+  #   if("(Intercept)" %in% colnames(X) | "(Intercept)" %in% names(X)){
+  #     pos <- which(colnames(X) == "(Intercept)")
+  #     X <- cbind("(Intercept)" = 1, scale_num(X[,-pos]))
+  #   } else{
+  #     X <- scale_num(X)
+  #   }
+  # }
 
   if(!is.null(change_vars)){
     n_var_t <- length(change_vars)
@@ -230,7 +241,7 @@ tgmrf <- function(data, formula, neigh, scale = T,
 
   P <- ncol(X)
 
-  if(is.null(c_beta)) c_beta <- 1/P
+  if(is.null(c_beta)) c_beta <- 1
   if(is.null(c_eps)) c_eps <- 1
   if(is.null(c_mu)) c_mu <- 1
   if(is.null(c_nu)) c_nu <- 1
@@ -278,7 +289,8 @@ tgmrf <- function(data, formula, neigh, scale = T,
                     MCMC_config = MCMC_config,
                     fix_rho = fix_rho, range = range,
                     verbose = verbose,
-                    c_beta = c_beta, c_eps = c_eps, c_mu = c_mu, c_nu = c_nu, c_rho = c_rho)
+                    c_beta = c_beta, c_eps = c_eps, c_mu = c_mu, c_nu = c_nu, c_rho = c_rho,
+                    conj_beta = conj_beta)
   }
   final_time <- Sys.time()
   out$time_elapsed <- final_time - initial_time

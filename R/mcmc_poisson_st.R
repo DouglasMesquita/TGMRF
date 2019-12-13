@@ -61,7 +61,8 @@ mcmc_poisson_st <- function(y, X, E,
                             fix_rho_s, fix_rho_t, fix_rho_st,
                             range_rho_s, range_rho_t, range_rho_st,
                             verbose,
-                            c_beta, c_eps, c_mu, c_nu, c_rho){
+                            c_beta, c_eps, c_mu, c_nu, c_rho,
+                            conj_beta){
 
   N <- length(eps)
   P <- length(beta)
@@ -89,8 +90,6 @@ mcmc_poisson_st <- function(y, X, E,
                 tau_beta = tau_beta,
                 eta_nu = eta_nu, psi_nu = psi_nu)
 
-  glm_sd <- summary(glm(formula = y ~ -1 + X , family = "poisson"))$coefficients[, 2]
-
   foo <- poimcar_cpp(nsim = nsim, burnin = burnin, thin = thin,
                      eps = eps, mu = mu, beta = beta, nu = nu,
                      rho_s = rho_s, rho_t = rho_t, rho_st = rho_st,
@@ -104,7 +103,8 @@ mcmc_poisson_st <- function(y, X, E,
                      type = type_num,
                      var_beta_met = var_beta, var_eps_met = var_eps, var_log_mu_met = var_log_mu, var_log_nu_met = var_log_nu, var_rho_met = var_rho,
                      verbose = verbose,
-                     c_beta = c_beta, c_eps = c_eps, c_mu = c_mu, c_nu = c_nu, c_rho = c_rho)
+                     c_beta = c_beta, c_eps = c_eps, c_mu = c_mu, c_nu = c_nu, c_rho = c_rho,
+                     conj_beta = conj_beta)
 
   out <- list(eps = foo$eps,
               mu = foo$mu,

@@ -355,3 +355,20 @@ moments_outcome <- function(X, beta, nu, Q, type_data){
 
   return(out)
 }
+
+#' @title Scale just numerical columns
+
+scale_num <- function(x, except = NULL, ...) {
+  if(is.matrix(x)) x <- as.data.frame(x)
+  if(is.vector(x)) x <- data.frame(value = x)
+
+  pos_scale <- sapply(X = x, FUN = is.numeric)
+  if(!is.null(except)) pos_scale[except] <- FALSE
+
+  names_x <- colnames(x)
+
+  x_scale <- cbind.data.frame(scale(x[pos_scale], ...), x[!pos_scale])
+  x_scale <- x_scale[, names_x]
+
+  return(x_scale)
+}

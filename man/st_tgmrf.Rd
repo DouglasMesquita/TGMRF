@@ -7,7 +7,7 @@
 st_tgmrf(y, X, n_reg, n_var, beta, nu, eps, mu, rho_s, rho_t, rho_st, tau,
   family, type, mat_type, method, nsim, burnin, thin, E, n, neigh,
   prior_param, MCMC_config, fix_rho, range, verbose, c_beta, c_eps, c_mu,
-  c_nu, c_rho)
+  c_nu, c_rho, conj_beta)
 }
 \arguments{
 \item{y}{Response variable}

@@ -9,7 +9,7 @@ mcmc_poisson_st(y, X, E, n_reg, n_var, neigh, beta, nu, eps, mu, rho_s,
   tau_beta, mean_beta, eta_nu, psi_nu, ninit, maxpoint, var_beta, var_eps,
   var_log_mu, var_log_nu, var_rho, fix_rho_s, fix_rho_t, fix_rho_st,
   range_rho_s, range_rho_t, range_rho_st, verbose, c_beta, c_eps, c_mu,
-  c_nu, c_rho)
+  c_nu, c_rho, conj_beta)
 }
 \arguments{
 \item{y}{Response variable}

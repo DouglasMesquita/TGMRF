@@ -127,8 +127,16 @@ dtmvnorm_cpp <- function(x, a, b, mean, var) {
 #'
 #' @description To usage in MCMC estimation
 #'
-dens_beta_cpp <- function(x_beta, Xbeta, x_eps, x_nu, sigma, params) {
-    .Call('_TGMRF_dens_beta_cpp', PACKAGE = 'TGMRF', x_beta, Xbeta, x_eps, x_nu, sigma, params)
+dens_beta_cpp <- function(x_beta, Xbeta, x_eps, x_nu, sigma, i, params) {
+    .Call('_TGMRF_dens_beta_cpp', PACKAGE = 'TGMRF', x_beta, Xbeta, x_eps, x_nu, sigma, i, params)
+}
+
+#' @title dens_betas_cpp
+#'
+#' @description To usage in MCMC estimation
+#'
+dens_betas_cpp <- function(x_beta, Xbeta, x_eps, x_nu, sigma, params) {
+    .Call('_TGMRF_dens_betas_cpp', PACKAGE = 'TGMRF', x_beta, Xbeta, x_eps, x_nu, sigma, params)
 }
 
 #' @title dens_eps_cpp
@@ -182,7 +190,7 @@ dens_rho_cpp <- function(x_Xbeta, x_eps, x_rho, x_nu, Q, sigma, Qsparse, params)
 #' @param var_log_nu_met Variance of log(nu) proposal
 #' @param tau Vector of tau parameters to construct Q
 #'
-poimcar_cpp <- function(nsim, burnin, thin, eps, mu, beta, nu, rho_s, rho_t, rho_st, X, y, E, Ws, Wt, N, P, mean_beta, tau_beta, eta_nu, psi_nu, fix_rho_s, fix_rho_t, fix_rho_st, range_rho_s, range_rho_t, range_rho_st, type, var_beta_met, var_eps_met, var_log_mu_met, var_rho_met, var_log_nu_met, verbose, c_beta, c_eps, c_mu, c_nu, c_rho) {
-    .Call('_TGMRF_poimcar_cpp', PACKAGE = 'TGMRF', nsim, burnin, thin, eps, mu, beta, nu, rho_s, rho_t, rho_st, X, y, E, Ws, Wt, N, P, mean_beta, tau_beta, eta_nu, psi_nu, fix_rho_s, fix_rho_t, fix_rho_st, range_rho_s, range_rho_t, range_rho_st, type, var_beta_met, var_eps_met, var_log_mu_met, var_rho_met, var_log_nu_met, verbose, c_beta, c_eps, c_mu, c_nu, c_rho)
+poimcar_cpp <- function(nsim, burnin, thin, eps, mu, beta, nu, rho_s, rho_t, rho_st, X, y, E, Ws, Wt, N, P, mean_beta, tau_beta, eta_nu, psi_nu, fix_rho_s, fix_rho_t, fix_rho_st, range_rho_s, range_rho_t, range_rho_st, type, var_beta_met, var_eps_met, var_log_mu_met, var_rho_met, var_log_nu_met, verbose, c_beta, c_eps, c_mu, c_nu, c_rho, conj_beta) {
+    .Call('_TGMRF_poimcar_cpp', PACKAGE = 'TGMRF', nsim, burnin, thin, eps, mu, beta, nu, rho_s, rho_t, rho_st, X, y, E, Ws, Wt, N, P, mean_beta, tau_beta, eta_nu, psi_nu, fix_rho_s, fix_rho_t, fix_rho_st, range_rho_s, range_rho_t, range_rho_st, type, var_beta_met, var_eps_met, var_log_mu_met, var_rho_met, var_log_nu_met, verbose, c_beta, c_eps, c_mu, c_nu, c_rho, conj_beta)
 }
 

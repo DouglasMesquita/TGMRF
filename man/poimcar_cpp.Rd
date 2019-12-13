@@ -8,7 +8,7 @@ poimcar_cpp(nsim, burnin, thin, eps, mu, beta, nu, rho_s, rho_t, rho_st, X,
   y, E, Ws, Wt, N, P, mean_beta, tau_beta, eta_nu, psi_nu, fix_rho_s,
   fix_rho_t, fix_rho_st, range_rho_s, range_rho_t, range_rho_st, type,
   var_beta_met, var_eps_met, var_log_mu_met, var_rho_met, var_log_nu_met,
-  verbose, c_beta, c_eps, c_mu, c_nu, c_rho)
+  verbose, c_beta, c_eps, c_mu, c_nu, c_rho, conj_beta)
 }
 \arguments{
 \item{nsim}{MCMC size}

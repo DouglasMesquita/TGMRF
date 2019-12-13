@@ -49,7 +49,8 @@ st_tgmrf <- function(y, X, n_reg, n_var,
                      MCMC_config,
                      fix_rho, range,
                      verbose,
-                     c_beta, c_eps, c_mu, c_nu, c_rho){
+                     c_beta, c_eps, c_mu, c_nu, c_rho,
+                     conj_beta){
 
   P <- length(beta)
   N <- length(y)
@@ -117,6 +118,8 @@ st_tgmrf <- function(y, X, n_reg, n_var,
     var_rho <- diag(var_rho, ncol = 3)
   }
 
+  conj_beta <- ifelse(conj_beta, 1L, 0L)
+
   if(ninit < 3 | !is.numeric(ninit))
     stop("ninit must be a numeric > 2")
   if(maxpoint < 1 | !is.numeric(maxpoint))
@@ -153,7 +156,8 @@ st_tgmrf <- function(y, X, n_reg, n_var,
                            fix_rho_s = fix_rho_s, fix_rho_t = fix_rho_t, fix_rho_st = fix_rho_st,
                            range_rho_s = range_rho_s, range_rho_t = range_rho_t, range_rho_st = range_rho_st,
                            verbose = verbose,
-                           c_beta = c_beta, c_eps = c_eps, c_mu = c_mu, c_nu = c_nu, c_rho = c_rho)
+                           c_beta = c_beta, c_eps = c_eps, c_mu = c_mu, c_nu = c_nu, c_rho = c_rho,
+                           conj_beta = conj_beta)
   } else{
     stop("It is still not ready")
 

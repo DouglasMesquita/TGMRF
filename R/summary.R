@@ -6,7 +6,7 @@
 #'
 #' @export
 
-summary.tgmrf <- function(object, bw = 0.1, HPD = T){
+summary.tgmrf <- function(object, bw = 0.1, HPD = T, level = 0.95){
 
   ans <- list()
   ans$'Call' <- object$call
@@ -14,7 +14,7 @@ summary.tgmrf <- function(object, bw = 0.1, HPD = T){
   object$beta <- as.matrix(object$beta)
 
   if(HPD){
-    hpd_interval <- apply(X = object$beta, MARGIN = 2, function(x) coda::HPDinterval(coda::as.mcmc(x)))
+    hpd_interval <- apply(X = object$beta, MARGIN = 2, function(x) coda::HPDinterval(coda::as.mcmc(x), prob = level))
 
     coef_info <- data.frame('mean' = colMeans(object$beta),
                             'median' = apply(X = object$beta, MARGIN = 2, median),
@@ -27,16 +27,16 @@ summary.tgmrf <- function(object, bw = 0.1, HPD = T){
                             'median' = apply(X = object$beta, MARGIN = 2, median),
                             'mode' = apply(X = object$beta, MARGIN = 2, mode, bw = bw),
                             'std_error' = apply(X = object$beta, MARGIN = 2, sd),
-                            'lower_95' = apply(X = object$beta, MARGIN = 2, function(x) quantile(x = x, probs = 0.025)),
-                            'upper_95' = apply(X = object$beta, MARGIN = 2, function(x) quantile(x = x, probs = 0.975)))
+                            'lower_95' = apply(X = object$beta, MARGIN = 2, function(x) quantile(x = x, probs = (1-level)/2)),
+                            'upper_95' = apply(X = object$beta, MARGIN = 2, function(x) quantile(x = x, probs = (1+level)/2)))
   }
 
   ans$'Coeficients' <- coef_info
 
   if(!is.null(object$call$group_var)){
     if(HPD){
-      hpd_rho <- apply(X = object$rho, MARGIN = 2, function(x) coda::HPDinterval(coda::as.mcmc(x)))
-      hpd_nu <- coda::HPDinterval(coda::as.mcmc(object$nu))
+      hpd_rho <- apply(X = object$rho, MARGIN = 2, function(x) coda::HPDinterval(coda::as.mcmc(x), prob = level))
+      hpd_nu <- coda::HPDinterval(coda::as.mcmc(object$nu), prob = level)
 
       other_info <- data.frame('mean' = c(colMeans(object$rho), mean(object$nu)),
                                'median' = c(apply(X = object$rho, MARGIN = 2, median), median(object$nu)),
@@ -51,17 +51,17 @@ summary.tgmrf <- function(object, bw = 0.1, HPD = T){
                                'median' = c(apply(X = object$rho, MARGIN = 2, median), median(object$nu)),
                                'mode' = c(apply(X = object$rho, MARGIN = 2, mode, bw = bw), mode(object$nu)),
                                'std_error' = c(apply(X = object$rho, MARGIN = 2, sd), sd(object$nu)),
-                               'lower_95' = c(apply(X = object$rho, MARGIN = 2, function(x) quantile(x = x, probs = 0.025)),
-                                              quantile(x = object$nu, probs = 0.025)),
-                               'upper_95' = c(apply(X = object$rho, MARGIN = 2, function(x) quantile(x = x, probs = 0.975)),
-                                              quantile(x = object$nu, probs = 0.975)))
+                               'lower_95' = c(apply(X = object$rho, MARGIN = 2, function(x) quantile(x = x, probs = (1-level)/2)),
+                                              quantile(x = object$nu, probs = (1-level)/2)),
+                               'upper_95' = c(apply(X = object$rho, MARGIN = 2, function(x) quantile(x = x, probs = (1+level)/2)),
+                                              quantile(x = object$nu, probs = (1+level)/2)))
     }
     rownames(other_info) <- c("Spatial parameter", "Temporal parameter", "Spatio-temporal parameter", "Dispersion parameter")
     ans$'Other parameters' <- other_info
   } else{
     if(HPD){
-      hpd_rho <- coda::HPDinterval(coda::as.mcmc(object$rho))
-      hpd_nu <- coda::HPDinterval(coda::as.mcmc(object$nu))
+      hpd_rho <- coda::HPDinterval(coda::as.mcmc(object$rho), prob = level)
+      hpd_nu <- coda::HPDinterval(coda::as.mcmc(object$nu), prob = level)
 
       other_info <- data.frame('mean' = c(mean(object$rho), mean(object$nu)),
                                'median' = c(median(object$rho), median(object$nu)),
@@ -76,10 +76,10 @@ summary.tgmrf <- function(object, bw = 0.1, HPD = T){
                                'median' = c(median(object$rho), median(object$nu)),
                                'mode' = c(mode(object$rho, bw = bw), mode(object$nu, bw = bw)),
                                'std_error' = c(sd(object$rho), sd(object$nu)),
-                               'lower_95' = c(quantile(x = object$rho, probs = 0.025),
-                                              quantile(x = object$nu, probs = 0.025)),
-                               'upper_95' = c(quantile(x = object$rho, probs = 0.975),
-                                              quantile(x = object$nu, probs = 0.975)))
+                               'lower_95' = c(quantile(x = object$rho, probs = (1-level)/2),
+                                              quantile(x = object$nu, probs = (1-level)/2)),
+                               'upper_95' = c(quantile(x = object$rho, probs = (1+level)/2),
+                                              quantile(x = object$nu, probs = (1+level)/2)))
     }
     rownames(other_info) <- c("Spatial parameter", "Dispersion parameter")
     ans$'Other parameters' <- other_info

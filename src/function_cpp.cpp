@@ -308,6 +308,90 @@ double dtmvnorm_cpp(arma::vec x, arma::vec a, arma::vec b, arma::vec mean, arma:
 //'
 // [[Rcpp::export]]
 double dens_beta_cpp(arma::vec x_beta, arma::vec& Xbeta, arma::vec x_eps, double x_nu, arma::mat sigma,
+                     int i, Rcpp::List& params){
+  int j;
+  double out = 0.0, mu = 0.0;
+
+  /// Arguments
+  int N = params["N"];
+  int P = params["P"];
+  int type = params["type"];
+
+  arma::vec y = params["y"];
+  arma::vec e = params["e"];
+  arma::mat X = params["X"];
+
+  arma::vec tau_beta = params["tau_beta"];
+  arma::vec mean_beta = params["mean_beta"];
+
+  /// Updating Xbeta
+  Xbeta = X*x_beta;                                           /// returning the current Xbeta
+
+  /// Variable
+  for(j = 0; j < N; j++){
+    if(type == 1) mu = R::qgamma(R::pnorm(x_eps(j), 0, sqrt(sigma(j, j)), 1, 1), x_nu, exp(Xbeta(j))/x_nu, 1, 1);
+    if(type == 2) mu = R::qgamma(R::pnorm(x_eps(j), 0, sqrt(sigma(j, j)), 1, 1), exp(Xbeta(j))*x_nu, 1/x_nu, 1, 1);
+    if(type == 3) mu = R::qgamma(R::pnorm(x_eps(j), 0, sqrt(sigma(j, j)), 1, 1), exp(Xbeta(j))*exp(Xbeta(j))*x_nu, 1/(x_nu*exp(Xbeta(j))), 1, 1);
+    if(type == 4) mu = R::qlnorm(R::pnorm(x_eps(j), 0, sqrt(sigma(j, j)), 1, 1), Xbeta(j), sqrt(sigma(j, j)/x_nu), 1, 1);
+    if(type == 5) mu = R::qlnorm(R::pnorm(x_eps(j), 0, sqrt(sigma(j, j)), 1, 1), Xbeta(j), sqrt(1/x_nu), 1, 1);
+    if(type == 6) mu = R::qweibull(R::pnorm(x_eps(j), 0, sqrt(sigma(j, j)), 1, 1), 1/x_nu, exp(Xbeta(j)), 1, 1);
+    if(type == 7) mu = R::qweibull(R::pnorm(x_eps(j), 0, sqrt(sigma(j, j)), 1, 1), exp(Xbeta(j)), 1/x_nu, 1, 1);
+
+    out = out - e(j)*mu + y(j)*log(mu);                       /// likelihood
+  }
+
+  out = out -
+    (0.01/2.0)*x_beta(i)*x_beta(i); /// prior beta
+
+  return out;
+}
+
+void metropolis_beta_cpp(arma::vec beta_prev, arma::vec eps_prev, double nu_prev, arma::mat sigma,
+                         arma::mat& varBeta, arma::vec& beta_samp, arma::vec& Xbeta_samp, double c_beta,
+                         int i, Rcpp::List& params){
+
+  double prevloglik, loglik, aux, ratio, u;
+  int N = params["N"];
+  int P = params["P"];
+  double beta_proposal;
+  arma::vec beta(P);
+
+  // beta
+  beta_proposal = Rcpp::as<double>(rnorm(1, beta_prev(i), sqrt(varBeta(i, i)*c_beta)));
+  beta = beta_prev;
+  beta(i) = beta_proposal;
+
+  /// Auxiliar vector
+  arma::vec Xbeta(N);
+
+  // likelihood
+  prevloglik = dens_beta_cpp(beta_prev, Xbeta, eps_prev, nu_prev, sigma, i, params);
+  loglik = dens_beta_cpp(beta, Xbeta, eps_prev, nu_prev, sigma, i, params); // storing the current Xbeta
+
+  aux = loglik - prevloglik;
+
+  if(aux > 0){
+    ratio = 1.0;
+  } else {
+    ratio = exp(aux);
+  }
+
+  u = Rcpp::as<double>(runif(1, 0, 1));
+
+  if(u < ratio){
+    beta_samp(i) = beta_proposal;
+    Xbeta_samp = Xbeta;
+  } else {
+    beta_samp(i) = beta_prev(i);
+  }
+}
+
+//' @title dens_betas_cpp
+//'
+//' @description To usage in MCMC estimation
+//'
+// [[Rcpp::export]]
+double dens_betas_cpp(arma::vec x_beta, arma::vec& Xbeta, arma::vec x_eps, double x_nu, arma::mat sigma,
                      Rcpp::List& params){
   int i;
   double out = 0.0, mu = 0.0;
@@ -346,7 +430,7 @@ double dens_beta_cpp(arma::vec x_beta, arma::vec& Xbeta, arma::vec x_eps, double
   return out;
 }
 
-void metropolis_beta_cpp(arma::vec beta_prev, arma::vec eps_prev, double nu_prev, arma::mat sigma,
+void metropolis_betas_cpp(arma::vec beta_prev, arma::vec eps_prev, double nu_prev, arma::mat sigma,
                          arma::mat& varBeta, arma::vec& beta_samp, arma::vec& Xbeta_samp, double c_beta,
                          Rcpp::List& params){
 
@@ -362,8 +446,8 @@ void metropolis_beta_cpp(arma::vec beta_prev, arma::vec eps_prev, double nu_prev
   arma::vec Xbeta(N);
 
   // likelihood
-  prevloglik = dens_beta_cpp(beta_prev, Xbeta, eps_prev, nu_prev, sigma, params);
-  loglik = dens_beta_cpp(beta_proposal, Xbeta, eps_prev, nu_prev, sigma, params); // storing the current Xbeta
+  prevloglik = dens_betas_cpp(beta_prev, Xbeta, eps_prev, nu_prev, sigma, params);
+  loglik = dens_betas_cpp(beta_proposal, Xbeta, eps_prev, nu_prev, sigma, params); // storing the current Xbeta
 
   aux = loglik - prevloglik;
 
@@ -724,7 +808,8 @@ Rcpp::List poimcar_cpp(int nsim, int burnin, int thin,
                        int type,
                        arma::mat var_beta_met, arma::mat var_eps_met, arma::mat var_log_mu_met, arma::mat var_rho_met, double var_log_nu_met,
                        int verbose,
-                       double c_beta, double c_eps, double c_mu, double c_nu, arma::vec c_rho){
+                       double c_beta, double c_eps, double c_mu, double c_nu, arma::vec c_rho,
+                       int conj_beta){
 
   int i = 0, j = 0, k = 0, l = 0, ntot = 0, nt = 1;
   double Snu, Snuaux;
@@ -781,11 +866,21 @@ Rcpp::List poimcar_cpp(int nsim, int burnin, int thin,
   // Loop
   for(i = 0; i < ntot; i++){
     /// Sampling beta
-    metropolis_beta_cpp(Sbeta, Seps, Snu,
-                        sigma,
-                        var_beta_met,
-                        Sbeta, Xbeta, c_beta,
-                        params);
+    if(conj_beta) {
+      metropolis_betas_cpp(Sbeta, Seps, Snu,
+                           sigma,
+                           var_beta_met,
+                           Sbeta, Xbeta, c_beta,
+                           params);
+    } else {
+      for(j = 0; j < P; j++){
+        metropolis_beta_cpp(Sbeta, Seps, Snu,
+                            sigma,
+                            var_beta_met,
+                            Sbeta, Xbeta, c_beta,
+                            j, params);
+      }
+    }
 
     /// Sampling eps
     for(j = 0; j < (N-1); j++){

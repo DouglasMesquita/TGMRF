@@ -12,7 +12,8 @@ tgmrf(data, formula, neigh, scale = T, spatial_var, neigh_order = NULL,
   thin = 1, E = NULL, n = 1, prior_param = NULL,
   MCMC_config = NULL, fix_rho = NULL, range = list(rho_s = c(-1, 1),
   rho_t = c(-1, 1), rho_st = c(-1, 1)), verbose = FALSE, c_beta = NULL,
-  c_eps = NULL, c_mu = NULL, c_nu = NULL, c_rho = NULL)
+  c_eps = NULL, c_mu = NULL, c_nu = NULL, c_rho = NULL,
+  conj_beta = TRUE)
 }
 \arguments{
 \item{data}{A data.frame with all variables used to fit a model}
