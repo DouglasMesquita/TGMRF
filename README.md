@@ -11,6 +11,10 @@
 
 <!-- badges: end -->
 
+## Acknowlodgment
+
+The authors would like to thank CAPES, CNPq and FAPEMIG for partial financial support.
+
 ## Overview
 
 TGMRF: Transformed Gaussian Markov Random Fields is a package that allow
